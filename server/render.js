@@ -1,6 +1,6 @@
 const { ICONS, iconSvg } = require('./icons');
 
-const TAGS = ['ontbijt', 'lunch', 'diner', 'bakken', 'vega'];
+const TAGS = ['ontbijt', 'lunch', 'diner', 'voorgerecht', 'hoofdgerecht', 'bijgerecht', 'nagerecht', 'bakken', 'vega'];
 const SITE = 'https://brambekkers.nl';
 
 function esc(s) {
