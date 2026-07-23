@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Demo: actieve navigatielink — bram bekkers</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script src="/theme.js"></script>
+<style>
+  :root {
+    --chiffon: #FAF0CA;
+    --navy: #0D3B66;
+    --navy-soft: #3D618C;
+    --navy-faint: #0d3b661a;
+    --line: #0d3b6633;
+    --card: #FFFDF4;
+  }
+  :root[data-theme="dark"] {
+    --chiffon: #0A2C4C; --navy: #F5EBC8; --navy-soft: #B9C8DB;
+    --navy-faint: #f5ebc81f; --line: #f5ebc83a; --card: #0E3459;
+  }
+  html { background: var(--chiffon); }
+  body {
+    margin: 0; padding: 2.5rem 1.1rem 4rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--navy); background: var(--chiffon); line-height: 1.55;
+  }
+  main { max-width: 760px; margin: 0 auto; }
+  h1, h2, .brand { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
+  h1 { font-size: 1.8rem; line-height: 1.2; margin: 0 0 .5rem; text-wrap: balance; }
+  .lede { color: var(--navy-soft); max-width: 58ch; margin: 0 0 2.2rem; }
+  .opties { display: flex; flex-direction: column; gap: 1.6rem; }
+
+  section.optie { border: 1.5px solid var(--line); border-radius: 12px; background: var(--card); overflow: hidden; }
+  .optie h2 { font-size: 1.1rem; margin: 0; padding: .85rem 1.1rem .1rem; }
+  .optie h2 .tag {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: .7rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--chiffon); background: var(--navy); border-radius: 99px;
+    padding: .15rem .6rem; margin-left: .5rem; vertical-align: 2px;
+  }
+  .optie p { margin: .25rem 0 .9rem; padding: 0 1.1rem; color: var(--navy-soft); font-size: .92rem; max-width: 60ch; }
+
+  .demo { border-top: 1.5px solid var(--line); background: var(--chiffon); }
+  .demo nav {
+    display: flex; align-items: center; gap: 1.3rem;
+    padding: 1rem 1.1rem; border-bottom: 2px solid var(--navy);
+  }
+  .demo nav a { color: var(--navy-soft); text-decoration: none; font-size: .95rem; cursor: default; }
+  .demo .brand { color: var(--navy); font-style: italic; font-size: 1.05rem; }
+
+  /* A — alleen vet (staat nu live) */
+  .a-vet a.actief { color: var(--navy); font-weight: 600; }
+
+  /* B — alleen inkt, geen vet */
+  .b-inkt a.actief { color: var(--navy); }
+
+  /* C — kiezeltje: zachte vlek, zoals de themaknop en de filterchips */
+  .c-kiezel a.actief {
+    color: var(--navy); font-weight: 600; background: var(--navy-faint);
+    padding: .3rem .75rem; margin: -.3rem -.2rem;
+    border-radius: 46% 54% 52% 48% / 55% 50% 50% 45%;
+  }
+
+  /* D — gevuld chipje, zoals een aangevinkte filterchip */
+  .d-chip a.actief {
+    color: var(--chiffon); background: var(--navy); font-weight: 500;
+    padding: .3rem .8rem; margin: -.3rem -.2rem; border-radius: 999px;
+  }
+
+  /* E — stipje voor het woord */
+  .e-stip a.actief { color: var(--navy); font-weight: 600; }
+  .e-stip a.actief::before {
+    content: ""; display: inline-block; width: .38em; height: .38em;
+    border-radius: 50%; background: var(--navy); margin-right: .45em; vertical-align: .12em;
+  }
+
+  .voetnoot { margin-top: 2.5rem; font-size: .85rem; color: var(--navy-soft); }
+  .voetnoot a { color: var(--navy); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Hoe zie je op welke pagina je bent?</h1>
+  <p class="lede">De underscore onder de actieve link is weg. Hieronder vijf smaken, steeds met
+  “recepten” als actieve link. De demo volgt je licht/donker-instelling van de site.
+  Optie A staat nu live; zeg het als je liever een van de andere wilt.</p>
+
+  <div class="opties">
+    <section class="optie">
+      <h2>A · Alleen dikgedrukt<span class="tag">staat live</span></h2>
+      <p>Vet én volle navy-inkt; de rest blijft zacht blauw. Rustig en onopvallend — wat je zelf voorstelde.</p>
+      <div class="demo"><nav class="a-vet">
+        <span class="brand">bram bekkers</span>
+        <a>home</a><a class="actief">recepten</a><a>lezen</a>
+      </nav></div>
+    </section>
+
+    <section class="optie">
+      <h2>B · Alleen donkerder inkt</h2>
+      <p>Geen vet, alleen kleurverschil: actief in volle navy, de rest zacht. Nóg subtieler, en de woorden
+      blijven exact even breed — de balk verspringt nooit een pixel tussen pagina’s.</p>
+      <div class="demo"><nav class="b-inkt">
+        <span class="brand">bram bekkers</span>
+        <a>home</a><a class="actief">recepten</a><a>lezen</a>
+      </nav></div>
+    </section>
+
+    <section class="optie">
+      <h2>C · Kiezeltje</h2>
+      <p>Een zachte, organisch gevormde vlek achter het woord — dezelfde blobvorm als de themaknop.
+      Past bij het handgetekende karakter van de site en is in één oogopslag te zien.</p>
+      <div class="demo"><nav class="c-kiezel">
+        <span class="brand">bram bekkers</span>
+        <a>home</a><a class="actief">recepten</a><a>lezen</a>
+      </nav></div>
+    </section>
+
+    <section class="optie">
+      <h2>D · Gevuld chipje</h2>
+      <p>Navy vlakje met crème letters, precies zoals een aangevinkte filterchip bij de recepten.
+      Het duidelijkst van allemaal, maar ook het zwaarste accent in de balk.</p>
+      <div class="demo"><nav class="d-chip">
+        <span class="brand">bram bekkers</span>
+        <a>home</a><a class="actief">recepten</a><a>lezen</a>
+      </nav></div>
+    </section>
+
+    <section class="optie">
+      <h2>E · Stipje ervoor</h2>
+      <p>Vet plus een klein bolletje vóór het woord, als een gestempelde markering.
+      Vriendelijk klein gebaar; geen streep, wel een ankertje voor het oog.</p>
+      <div class="demo"><nav class="e-stip">
+        <span class="brand">bram bekkers</span>
+        <a>home</a><a class="actief">recepten</a><a>lezen</a>
+      </nav></div>
+    </section>
+  </div>
+
+  <p class="voetnoot">Tijdelijke demopagina (niet geïndexeerd, nergens gelinkt). Na je keuze haal ik hem weer weg.
+  <a href="/">← terug naar de site</a></p>
+</main>
+</body>
+</html>
