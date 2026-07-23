@@ -8,6 +8,10 @@ const WORDMARK_SVG = fs.readFileSync(path.join(__dirname, '..', 'logo', 'vector'
   .replace('stroke="#0D3B66"', 'stroke="currentColor"')
   .replace('<svg ', '<svg class="wordmark" aria-hidden="true" focusable="false" ');
 
+// Cache-busting: versie in asset-URL's op basis van de css-bestandstijd, zodat
+// browsers na een deploy direct de nieuwe bestanden ophalen (maxAge is 1 uur).
+const ASSET_V = Math.floor(fs.statSync(path.join(__dirname, '..', 'public', 'style.css')).mtimeMs).toString(36);
+
 const TAGS = ['ontbijt', 'lunch', 'diner', 'voorgerecht', 'hoofdgerecht', 'bijgerecht', 'nagerecht', 'bakken', 'vega'];
 const SITE = 'https://brambekkers.nl';
 
@@ -38,10 +42,10 @@ function layout({ title, description, ogImage, path: reqPath, loggedIn, body, js
 <meta property="og:image" content="${SITE}${esc(ogImage || '/og/site.png')}">
 <meta property="og:url" content="${SITE}${esc(reqPath)}">
 <meta property="og:type" content="website">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.svg?v=${ASSET_V}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<script src="/theme.js"></script>
-<link rel="stylesheet" href="/style.css">
+<script src="/theme.js?v=${ASSET_V}"></script>
+<link rel="stylesheet" href="/style.css?v=${ASSET_V}">
 ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
 </head>
 <body>
@@ -50,9 +54,17 @@ ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
   <a href="/" ${reqPath === '/' ? 'class="active"' : ''}>home</a>
   <a href="/recepten" ${reqPath.startsWith('/recept') ? 'class="active"' : ''}>recepten</a>
   ${loggedIn ? '<a href="/nieuw" class="nav-nieuw">+ nieuw</a>' : ''}
-  <button id="thema-knop" aria-label="Wissel tussen licht en donker thema">
-    <svg class="zon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12h2.5M19 12h2.5M5 5l1.8 1.8M17.2 17.2L19 19M19 5l-1.8 1.8M6.8 17.2L5 19"/></svg>
-    <svg class="maan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  <button id="thema-knop" aria-label="Wissel tussen licht en donker thema" title="Licht/donker thema">
+    <svg class="zon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.6" fill="#d9b56d"/>
+      <g stroke="#d9b56d" stroke-width="2" stroke-linecap="round">
+        <line x1="12" y1="1.5" x2="12" y2="3.8"/><line x1="12" y1="20.2" x2="12" y2="22.5"/>
+        <line x1="1.5" y1="12" x2="3.8" y2="12"/><line x1="20.2" y1="12" x2="22.5" y2="12"/>
+        <line x1="4.6" y1="4.6" x2="6.2" y2="6.2"/><line x1="17.8" y1="17.8" x2="19.4" y2="19.4"/>
+        <line x1="17.8" y1="6.2" x2="19.4" y2="4.6"/><line x1="4.6" y1="19.4" x2="6.2" y2="17.8"/>
+      </g>
+    </svg>
+    <svg class="maan" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="var(--navy-soft)"/></svg>
   </button>
 </nav>
 <main>
@@ -62,7 +74,7 @@ ${body}
   <span>© Bram Bekkers</span>
   ${loggedIn ? '<form method="post" action="/api/logout" class="inline"><button class="linkbtn">uitloggen</button></form>' : '<a href="/login" rel="nofollow">inloggen</a>'}
 </footer>
-<script src="/app.js" defer></script>
+<script src="/app.js?v=${ASSET_V}" defer></script>
 </body>
 </html>`;
 }
