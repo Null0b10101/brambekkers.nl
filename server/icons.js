@@ -1,5 +1,9 @@
 // Ingrediënt-icoontjes: simpele lijntekeningen (viewBox 0 0 64 64, stroke = currentColor).
 // `match` zijn de woorden waarop automatisch een icoontje wordt gekozen uit de ingrediëntenlijst.
+
+// Gedeelde basis voor de keukenvlaggetjes: stokje + wapperende vlag.
+const VLAG = '<path d="M18 54V10"/><path d="M18 12q15-5 30 0v22q-15-5-30 0z"/>';
+
 const ICONS = {
   tomaat: {
     label: 'tomaat',
@@ -86,6 +90,26 @@ const ICONS = {
     match: ['garnaal', 'garnalen', 'gamba'],
     svg: '<path d="M44 18q10 8 2 20q-8 12-22 10q-10-2-10-10q0-6 8-6q10 0 14-6q4-6 8-8zM44 18q-4-4-10-2M14 44l-4 8M20 46l0 8"/>'
   },
+  gehakt: {
+    label: 'gehakt(bal)',
+    match: ['gehakt', 'rundergehakt', 'gehaktbal', 'gehaktballen', 'half-om-half'],
+    svg: '<circle cx="30" cy="39" r="13"/><path d="M26 36h.1M34 42h.1M31 45h.1"/><path d="M39 30L48 19"/><circle cx="50" cy="16" r="3.5"/>'
+  },
+  worst: {
+    label: 'worst',
+    match: ['worst', 'worstjes', 'braadworst', 'chorizo', 'merguez', 'sucuk'],
+    svg: '<path d="M12 38q0-8 10-8h20q10 0 10 8q0 8-10 8H22q-10 0-10-8z"/><path d="M11 35q-4-1-4-5M53 35q4-1 4-5"/><path d="M24 34l-2 6M38 34l-2 6"/>'
+  },
+  spek: {
+    label: 'spek / bacon',
+    match: ['spek', 'spekjes', 'spekreepjes', 'ontbijtspek', 'bacon', 'pancetta'],
+    svg: '<path d="M12 26q7-6 13 0q7 6 14 0q6-5 13 0v12q-7-6-13 0q-7 6-14 0q-6-5-13 0z"/><path d="M12 32q7-6 13 0q7 6 14 0q6-5 13 0"/>'
+  },
+  biefstuk: {
+    label: 'rund / biefstuk',
+    match: ['biefstuk', 'rundvlees', 'entrecote', 'ribeye', 'steak', 'riblappen', 'sucade', 'stoofvlees'],
+    svg: '<path d="M14 36q0-12 18-12q18 0 18 11q0 13-18 13q-18 0-18-12z"/><path d="M26 31q-4 3 0 6M36 34h.1M40 30h.1"/>'
+  },
   pasta: {
     label: 'pasta',
     match: ['pasta', 'spaghetti', 'penne', 'macaroni', 'tagliatelle', 'lasagne', 'noedels', 'noodles'],
@@ -145,6 +169,62 @@ const ICONS = {
     label: 'bouillon / soep',
     match: ['bouillon', 'soep', 'fond'],
     svg: '<path d="M14 30h36v6q0 16-18 16q-18 0-18-16zM8 30h48"/><path d="M26 22q-2-4 0-8M38 22q-2-4 0-8"/>'
+  },
+
+  // ── keukenvlaggetjes ──────────────────────────────────────────────────────
+  // Zelfde wapperende vlag op een stokje (VLAG), met per land een klein teken
+  // erin. Echte vlaggen zijn in één kleur vaak niet te onderscheiden (Italië,
+  // Frankrijk en Ierland zijn monochroom identiek), dus waar het vlagembleem
+  // niet werkt staat er een gerechtje in. Match = typische voorraadkast-woorden.
+  italiaans: {
+    label: 'Italiaans',
+    match: ['pesto', 'mascarpone', 'pecorino', 'gnocchi'],
+    svg: VLAG + '<path d="M27 16l13 4l-9 10z"/><path d="M31 21h.1"/>'
+  },
+  frans: {
+    label: 'Frans',
+    match: ['dijonmosterd', 'provence', 'baguette'],
+    svg: VLAG + '<path d="M26 27q1-9 7-9q6 0 7 9M26 27l-3 1M40 27l3 1"/>'
+  },
+  spaans: {
+    label: 'Spaans',
+    match: ['paella', 'saffraan', 'manchego'],
+    svg: VLAG + '<path d="M33 28V16M33 28l-8-7M33 28l8-7M26 17q7-4 14 0"/>'
+  },
+  grieks: {
+    label: 'Grieks',
+    match: ['tzatziki', 'olijven', 'halloumi'],
+    svg: VLAG + '<path d="M27 18v11M33 18v11M39 18v11M25 16h16M25 31h16"/>'
+  },
+  marokkaans: {
+    label: 'Marokkaans',
+    match: ['harissa', 'hanout', 'couscous'],
+    svg: VLAG + '<path d="M25 28h16M27 28q0-8 6-8q6 0 6 8M33 20v-3"/>'
+  },
+  turks: {
+    label: 'Turks',
+    match: ['sucuk', 'filodeeg', 'granaatappel'],
+    svg: VLAG + '<path d="M36 15A8 8 0 1 0 36 29A10 10 0 0 1 36 15z"/>'
+  },
+  indiaas: {
+    label: 'Indiaas',
+    match: ['masala', 'curry', 'naan', 'ghee', 'kerrie'],
+    svg: VLAG + '<circle cx="33" cy="22" r="6.5"/><path d="M33 15.5v13M26.5 22h13"/>'
+  },
+  thais: {
+    label: 'Thais',
+    match: ['currypasta', 'vissaus', 'citroengras'],
+    svg: VLAG + '<path d="M38 15q5 6-2 12q-5 4-8 1q-2-3 3-5q5-3 7-8zM38 15q0-3 4-3"/>'
+  },
+  japans: {
+    label: 'Japans',
+    match: ['miso', 'sushi', 'nori', 'mirin', 'sojasaus'],
+    svg: VLAG + '<circle cx="33" cy="22" r="6"/>'
+  },
+  mexicaans: {
+    label: 'Mexicaans',
+    match: ['taco', 'tacos', 'guacamole', 'nachos'],
+    svg: VLAG + '<path d="M33 30V15M33 23q-5 0-5-5M33 26q5 0 5-5"/>'
   }
 };
 
