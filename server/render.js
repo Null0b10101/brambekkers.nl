@@ -33,13 +33,18 @@ function jsonForScript(obj) {
 }
 
 // Tijden in minuten: time_min = totale tijd, active_min = actieve (hands-on)
-// tijd; "snel" filtert op totaal <= 30. Compacte tekst voor tegels en de
-// beschrijving; de receptpagina toont losse chips.
+// tijd; "snel" filtert op totaal <= 30. Weergave boven het uur als uren +
+// minuten (90 → "1 u 30 min"); invoer blijft altijd in minuten.
+function minTekst(min) {
+  if (min < 60) return `${min} min`;
+  const u = Math.floor(min / 60), m = min % 60;
+  return m ? `${u} u ${m} min` : `${u} uur`;
+}
 function tijdTekst(r) {
   if (r.active_min && r.time_min && r.active_min !== r.time_min)
-    return `${r.active_min} min actief · ${r.time_min} min totaal`;
-  if (r.time_min) return `${r.time_min} min`;
-  if (r.active_min) return `${r.active_min} min actief`;
+    return `${minTekst(r.active_min)} actief · ${minTekst(r.time_min)} totaal`;
+  if (r.time_min) return minTekst(r.time_min);
+  if (r.active_min) return `${minTekst(r.active_min)} actief`;
   return '';
 }
 
@@ -121,7 +126,7 @@ function tile(r) {
   <span class="art">${art}</span>
   <span class="body">
     <span class="name">${esc(r.name)}</span>
-    <span class="meta">${[r.time_min ? `${r.time_min} min` : '', ...JSON.parse(r.tags)].filter(Boolean).map(esc).join(' · ')}</span>
+    <span class="meta">${[r.time_min ? minTekst(r.time_min) : '', ...JSON.parse(r.tags)].filter(Boolean).map(esc).join(' · ')}</span>
   </span>
 </a>`;
 }
@@ -235,8 +240,8 @@ function receptPage({ r, loggedIn }) {
 ${r.status === 'draft' ? '<p class="concept-banner">Concept, alleen jij ziet dit.</p>' : ''}
 <h1>${esc(r.name)}</h1>
 <div class="chips meta-chips">
-  ${r.active_min ? `<span class="chip">${r.active_min} min actief</span>` : ''}
-  ${r.time_min ? `<span class="chip">${r.time_min} min${r.active_min ? ' totaal' : ''}</span>` : ''}
+  ${r.active_min ? `<span class="chip">${minTekst(r.active_min)} actief</span>` : ''}
+  ${r.time_min ? `<span class="chip">${minTekst(r.time_min)}${r.active_min ? ' totaal' : ''}</span>` : ''}
   ${r.servings ? `<span class="chip">${esc(r.servings)}</span>` : ''}
   ${tags.map((t) => `<span class="chip">${esc(t)}</span>`).join('')}
 </div>
