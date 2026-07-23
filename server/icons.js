@@ -221,6 +221,11 @@ const ICONS = {
     match: ['miso', 'sushi', 'nori', 'mirin', 'sojasaus'],
     svg: VLAG + '<circle cx="33" cy="22" r="6"/>'
   },
+  koreaans: {
+    label: 'Koreaans',
+    match: ['kimchi', 'gochujang', 'bulgogi'],
+    svg: VLAG + '<circle cx="33" cy="22" r="8"/><path d="M25 22a4 4 0 0 1 8 0a4 4 0 0 0 8 0"/>'
+  },
   mexicaans: {
     label: 'Mexicaans',
     match: ['taco', 'tacos', 'guacamole', 'nachos'],
