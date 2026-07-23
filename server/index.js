@@ -18,6 +18,9 @@ const PORT = process.env.PORT || 3002;
 const RP_ID = process.env.RP_ID || 'brambekkers.nl';
 const ORIGIN = process.env.ORIGIN || `https://${RP_ID}`;
 process.env.ORIGIN = ORIGIN;
+// Toegestane origins voor mutaties; EXTRA_ORIGIN maakt tijdelijke
+// toegang via bijv. http://<vps-ip> mogelijk zolang DNS nog niet staat.
+process.env.ORIGINS = [ORIGIN, process.env.EXTRA_ORIGIN].filter(Boolean).join(',');
 
 const app = express();
 app.set('trust proxy', 'loopback');
@@ -112,7 +115,7 @@ app.post('/api/login', auth.checkOrigin, auth.loginRateLimit, async (req, res) =
     auth.logAuthFail(req, 'wachtwoord');
     return res.status(401).send(view.loginPage({ error: 'Onjuist wachtwoord.' }));
   }
-  auth.createSession(res);
+  auth.createSession(req, res);
   res.redirect('/nieuw');
 });
 
@@ -185,7 +188,7 @@ app.post('/api/webauthn/login', auth.checkOrigin, auth.loginRateLimit, async (re
     if (!verification.verified) throw new Error('niet geverifieerd');
     db.prepare('UPDATE credentials SET counter = ? WHERE id = ?')
       .run(verification.authenticationInfo.newCounter, cred.id);
-    auth.createSession(res);
+    auth.createSession(req, res);
     res.json({ ok: true });
   } catch (e) {
     auth.registerFailedAttempt(req);

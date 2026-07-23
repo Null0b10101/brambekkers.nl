@@ -9,13 +9,15 @@ function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-function createSession(res) {
+function createSession(req, res) {
   const token = crypto.randomBytes(32).toString('base64url');
   const expires = Date.now() + SESSION_DAYS * 864e5;
   db.prepare('INSERT INTO sessions (token_hash, expires) VALUES (?, ?)').run(hashToken(token), expires);
   res.cookie(COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    // Secure zodra het verzoek via https binnenkwam (X-Forwarded-Proto via nginx);
+    // zo werkt de tijdelijke http://<ip>-toegang ook.
+    secure: req.protocol === 'https',
     sameSite: 'strict',
     maxAge: SESSION_DAYS * 864e5,
     path: '/'
@@ -42,10 +44,12 @@ function requireAuth(req, res, next) {
 }
 
 // Zelfde-origin-check voor alle mutaties (naast SameSite=Strict).
+// ORIGINS is komma-gescheiden; naast het domein kan daar tijdelijk
+// bijv. http://<vps-ip> in staan (EXTRA_ORIGIN in de service).
 function checkOrigin(req, res, next) {
   const origin = req.headers.origin || '';
-  const expected = process.env.ORIGIN || '';
-  if (origin && expected && origin !== expected) {
+  const allowed = (process.env.ORIGINS || process.env.ORIGIN || '').split(',').filter(Boolean);
+  if (origin && allowed.length && !allowed.includes(origin)) {
     return res.status(403).json({ error: 'Ongeldige origin' });
   }
   next();
