@@ -125,7 +125,15 @@ app.post('/api/logout', (req, res) => {
 });
 
 // ── auth: passkey (WebAuthn) ──────────────────────────────────────────────
-const challenges = new Map(); // korte-termijn per type
+// Challenges zijn eenmalig en verlopen na 5 min (voorkomt replay).
+const challenges = new Map();
+const CHALLENGE_TTL = 5 * 60e3;
+function setChallenge(type, value) { challenges.set(type, { value, expires: Date.now() + CHALLENGE_TTL }); }
+function takeChallenge(type) {
+  const c = challenges.get(type);
+  challenges.delete(type);
+  return c && c.expires > Date.now() ? c.value : undefined;
+}
 app.get('/api/webauthn/register-options', auth.requireAuth, async (req, res) => {
   const options = await generateRegistrationOptions({
     rpName: 'brambekkers.nl', rpID: RP_ID,
@@ -134,7 +142,7 @@ app.get('/api/webauthn/register-options', auth.requireAuth, async (req, res) => 
     excludeCredentials: db.prepare('SELECT id FROM credentials').all().map((c) => ({ id: c.id })),
     authenticatorSelection: { residentKey: 'preferred', userVerification: 'preferred' }
   });
-  challenges.set('register', options.challenge);
+  setChallenge('register', options.challenge);
   res.json(options);
 });
 
@@ -142,7 +150,7 @@ app.post('/api/webauthn/register', auth.requireAuth, auth.checkOrigin, async (re
   try {
     const verification = await verifyRegistrationResponse({
       response: req.body,
-      expectedChallenge: challenges.get('register'),
+      expectedChallenge: takeChallenge('register'),
       expectedOrigin: ORIGIN,
       expectedRPID: RP_ID
     });
@@ -165,7 +173,7 @@ app.get('/api/webauthn/login-options', async (req, res) => {
       .map((c) => ({ id: c.id, transports: JSON.parse(c.transports) })),
     userVerification: 'preferred'
   });
-  challenges.set('login', options.challenge);
+  setChallenge('login', options.challenge);
   res.json(options);
 });
 
@@ -175,7 +183,7 @@ app.post('/api/webauthn/login', auth.checkOrigin, auth.loginRateLimit, async (re
     if (!cred) throw new Error('onbekende passkey');
     const verification = await verifyAuthenticationResponse({
       response: req.body,
-      expectedChallenge: challenges.get('login'),
+      expectedChallenge: takeChallenge('login'),
       expectedOrigin: ORIGIN,
       expectedRPID: RP_ID,
       credential: {

@@ -18,6 +18,11 @@ cd "$APP"
 npm ci --omit=dev --no-audit --no-fund 2>&1 | tail -1
 chown -R brambekkers:brambekkers "$APP/data"
 chown -R root:root "$APP/server" "$APP/public" "$APP/node_modules" "$APP/package.json" "$APP/package-lock.json" 2>/dev/null || true
+# Data-map en database afschermen: alleen de app-gebruiker (en root) mogen erbij.
+# De db bevat de argon2-wachtwoordhash en sessietokens — nooit leesbaar voor
+# andere sites/gebruikers op deze gedeelde VPS.
+chmod 750 "$APP/data" "$APP/data/og" "$APP/data/photos" 2>/dev/null || true
+find "$APP/data" -maxdepth 1 -name 'brambekkers.db*' -exec chmod 600 {} \; 2>/dev/null || true
 
 echo "== admin-wachtwoord (alleen bij eerste deploy) =="
 if ! sudo -u brambekkers env DATA_DIR="$APP/data" node -e "
@@ -61,14 +66,15 @@ systemctl enable --now brambekkers
 systemctl restart brambekkers
 
 echo "== nginx =="
-if [ ! -f /etc/nginx/snippets/brambekkers-security.conf ]; then
 cat > /etc/nginx/snippets/brambekkers-security.conf <<'EOF'
 add_header X-Content-Type-Options nosniff always;
 add_header X-Frame-Options DENY always;
 add_header Referrer-Policy strict-origin-when-cross-origin always;
-add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
+add_header Permissions-Policy "geolocation=(), camera=(), microphone=(), interest-cohort=()" always;
+add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'" always;
+# HSTS: alleen zinvol als https stabiel draait (het geval sinds 2026-07-23).
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 EOF
-fi
 if [ ! -f /etc/nginx/sites-available/brambekkers ]; then
 cat > /etc/nginx/sites-available/brambekkers <<EOF
 server {

@@ -3,11 +3,17 @@ const fs = require('fs');
 const Database = require('better-sqlite3');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
-fs.mkdirSync(path.join(DATA_DIR, 'photos'), { recursive: true });
-fs.mkdirSync(path.join(DATA_DIR, 'og'), { recursive: true });
+fs.mkdirSync(path.join(DATA_DIR, 'photos'), { recursive: true, mode: 0o750 });
+fs.mkdirSync(path.join(DATA_DIR, 'og'), { recursive: true, mode: 0o750 });
 
-const db = new Database(path.join(DATA_DIR, 'brambekkers.db'));
+const DB_PATH = path.join(DATA_DIR, 'brambekkers.db');
+const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
+// db-bestanden (incl. -wal/-shm) niet leesbaar voor andere gebruikers: bevat
+// wachtwoordhash en sessietokens.
+for (const f of ['brambekkers.db', 'brambekkers.db-wal', 'brambekkers.db-shm']) {
+  try { fs.chmodSync(path.join(DATA_DIR, f), 0o600); } catch (e) { /* nog niet aangemaakt */ }
+}
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS recipes (

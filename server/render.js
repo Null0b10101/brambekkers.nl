@@ -19,6 +19,15 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// JSON dat rechtstreeks in een <script>-blok komt: escape de tekens waarmee je
+// uit het script-element kunt breken (</script>, <!--). Houdt geldige JSON,
+// voorkomt HTML-injectie via receptvelden (defense-in-depth naast de CSP).
+function jsonForScript(obj) {
+  return JSON.stringify(obj)
+    .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+}
+
 // Tijd wordt opgeslagen als bovengrens van het gekozen vak (15/30/45/60,
 // 60+ als 90) en overal als vak getoond; "snel" filtert op <= 30.
 const TIJDVAKKEN = [
@@ -177,7 +186,7 @@ function receptPage({ r, loggedIn }) {
         return `<span style="display:inline-flex;transform:translateY(${dans.y}px) rotate(${dans.r}deg)">${iconSvg(k, dans.m)}</span>`;
       }).join('')}</div>`;
 
-  const jsonLd = JSON.stringify({
+  const jsonLd = jsonForScript({
     '@context': 'https://schema.org',
     '@type': 'Recipe',
     name: r.name,
@@ -250,7 +259,7 @@ function nieuwPage({ r, loggedIn, hasPasskey }) {
   const tagOpts = TAGS.map((t) =>
     `<label class="chip"><input type="checkbox" name="tags" value="${t}" ${r && JSON.parse(r.tags).includes(t) ? 'checked' : ''}>${t}</label>`
   ).join('');
-  const iconData = JSON.stringify(Object.fromEntries(Object.entries(ICONS).map(([k, ic]) => [k, ic.match])));
+  const iconData = jsonForScript(Object.fromEntries(Object.entries(ICONS).map(([k, ic]) => [k, ic.match])));
 
   return layout({
     title: r ? `Bewerk: ${r.name}` : 'Nieuw recept',
