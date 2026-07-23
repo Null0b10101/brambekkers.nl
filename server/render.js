@@ -19,13 +19,21 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// Tijd wordt opgeslagen als bovengrens van het gekozen vak (15/30/45/60,
+// 60+ als 90) en overal als vak getoond; "snel" filtert op <= 30.
+const TIJDVAKKEN = [
+  { value: 15, label: '0–15 min' },
+  { value: 30, label: '15–30 min' },
+  { value: 45, label: '30–45 min' },
+  { value: 60, label: '45–60 min' },
+  { value: 90, label: '60+ min' }
+];
+function tijdVak(min) {
+  if (!min) return null;
+  return TIJDVAKKEN.find((v) => min <= v.value) || TIJDVAKKEN[TIJDVAKKEN.length - 1];
+}
 function tijdLabel(min) {
-  if (!min) return '';
-  if (min >= 60) {
-    const u = Math.floor(min / 60), r = min % 60;
-    return r ? `${u}u ${r} min` : `${u} uur`;
-  }
-  return `${min} min`;
+  return tijdVak(min)?.label || '';
 }
 
 function layout({ title, description, ogImage, path: reqPath, loggedIn, body, jsonLd }) {
@@ -235,14 +243,14 @@ function nieuwPage({ r, loggedIn, hasPasskey }) {
   <label class="field"><span class="lab">Naam</span>
     <input class="input" name="name" required maxlength="120" value="${r ? esc(r.name) : ''}" placeholder="Pompoensoep met gember">
   </label>
-  <div class="field-rij">
-    <label class="field"><span class="lab">Tijd (minuten)</span>
-      <input class="input" name="time_min" type="number" min="1" max="1440" inputmode="numeric" value="${r?.time_min || ''}">
-    </label>
-    <label class="field"><span class="lab">Porties</span>
-      <input class="input" name="servings" maxlength="40" value="${r ? esc(r.servings) : ''}" placeholder="2 personen">
-    </label>
+  <div class="field"><span class="lab">Hoe snel klaar?</span>
+    <div class="chips">${TIJDVAKKEN.map((v) =>
+      `<label class="chip"><input type="radio" name="time_min" value="${v.value}" ${tijdVak(r?.time_min)?.value === v.value ? 'checked' : ''}>${v.label}</label>`).join('')}
+    </div>
   </div>
+  <label class="field"><span class="lab">Porties</span>
+    <input class="input" name="servings" maxlength="40" value="${r ? esc(r.servings) : ''}" placeholder="2 personen">
+  </label>
   <div class="field"><span class="lab">Tags</span><div class="chips">${tagOpts}</div></div>
   <label class="field"><span class="lab">Ingrediënten (één per regel)</span>
     <textarea class="input" name="ingredients" rows="7" required placeholder="1 flespompoen&#10;duim gember&#10;1 ui">${r ? esc(r.ingredients) : ''}</textarea>

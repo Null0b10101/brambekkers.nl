@@ -117,8 +117,10 @@ EOF
 systemctl reload fail2ban || systemctl restart fail2ban
 
 echo "== dagelijkse database-backup =="
+# via better-sqlite3's online-backup-API: consistent terwijl de site draait,
+# en de sqlite3-CLI is niet op de server geïnstalleerd
 cat > /etc/cron.d/brambekkers-backup <<EOF
-15 4 * * * root sqlite3 $APP/data/brambekkers.db ".backup /root/backup-brambekkers-\$(date +\%a).db" 2>&1 | logger -t brambekkers-backup
+15 4 * * * root cd $APP && node -e "require('better-sqlite3')('$APP/data/brambekkers.db').backup('/root/backup-brambekkers-'+new Date().getDay()+'.db')" 2>&1 | logger -t brambekkers-backup
 EOF
 
 echo
