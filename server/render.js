@@ -71,7 +71,7 @@ ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
 </head>
 <body>
 <nav>
-  <a class="brand" href="/" aria-label="bram bekkers — home">${WORDMARK_SVG}</a>
+  <a class="brand" href="/" aria-label="bram bekkers, home">${WORDMARK_SVG}</a>
   <a href="/" ${reqPath === '/' ? 'class="active"' : ''}>home</a>
   <a href="/recepten" ${reqPath.startsWith('/recept') ? 'class="active"' : ''}>recepten</a>
   <a href="/lezen" ${reqPath.startsWith('/lezen') || reqPath.startsWith('/paper') ? 'class="active"' : ''}>lezen</a>
@@ -146,8 +146,8 @@ function receptenPage({ recipes, q, tag, loggedIn, drafts }) {
     : '';
 
   return layout({
-    title: 'Recepten — Bram Bekkers',
-    description: 'De recepten die ik zelf kook: doordeweeks, bakken en alles ertussenin.',
+    title: 'Recepten · Bram Bekkers',
+    description: 'De recepten die ik kook en niet wil kwijtraken.',
     path: '/recepten',
     loggedIn,
     body: `<div class="kop-rij"><h1>Recepten</h1>${loggedIn ? '<a class="btn ghost" href="/nieuw">+ nieuw recept</a>' : ''}</div>
@@ -175,18 +175,18 @@ function homePage({ latest, latestArticle, loggedIn }) {
 
   return layout({
     title: 'Bram Bekkers',
-    description: 'Persoonlijke site van Bram Bekkers: recepten die ik kook en stukken die ik lees over voeding en gezondheid.',
+    description: 'Mijn recepten, en wat ik lees en schrijf over voeding en gezondheid.',
     path: '/',
     loggedIn,
     body: `<div class="ingangen">
   <a class="ingang" href="/recepten">
     <span class="art">${ART_RECEPT}</span>
-    <span class="ingang-tekst"><span class="i-titel">Recepten</span><span class="i-uitleg">Wat ik kook — doordeweeks, bakken en alles ertussenin.</span></span>
+    <span class="ingang-tekst"><span class="i-titel">Recepten</span><span class="i-uitleg">De dingen die ik kook en wil onthouden.</span></span>
     <span class="ga">Bekijk recepten →</span>
   </a>
   <a class="ingang" href="/lezen">
     <span class="art">${ART_LEZEN}</span>
-    <span class="ingang-tekst"><span class="i-titel">Lezen</span><span class="i-uitleg">Stukken over voeding &amp; gezondheid, plus een leeslijst.</span></span>
+    <span class="ingang-tekst"><span class="i-titel">Lezen</span><span class="i-uitleg">Wat ik lees en schrijf over voeding en gezondheid.</span></span>
     <span class="ga">Ga naar Lezen →</span>
   </a>
 </div>
@@ -228,14 +228,14 @@ function receptPage({ r, loggedIn }) {
   });
 
   return layout({
-    title: `${r.name} — Bram Bekkers`,
+    title: `${r.name} · Bram Bekkers`,
     description: `Recept: ${r.name}. ${tijdLabel(r.time_min)}${tags.length ? ', ' + tags.join(', ') : ''}.`,
     ogImage: `/og/${r.slug}.png`,
     path: `/recept/${r.slug}`,
     loggedIn,
     jsonLd,
     body: `<article class="recept" data-slug="${esc(r.slug)}">
-${r.status === 'draft' ? '<p class="concept-banner">Concept — alleen jij ziet dit.</p>' : ''}
+${r.status === 'draft' ? '<p class="concept-banner">Concept, alleen jij ziet dit.</p>' : ''}
 <h1>${esc(r.name)}</h1>
 <div class="chips meta-chips">
   ${r.time_min ? `<span class="chip">${tijdLabel(r.time_min)}</span>` : ''}
@@ -258,7 +258,7 @@ ${loggedIn ? `<p><a class="btn ghost" href="/nieuw?bewerk=${esc(r.slug)}">Bewerk
 
 function loginPage({ error }) {
   return layout({
-    title: 'Inloggen — Bram Bekkers',
+    title: 'Inloggen · Bram Bekkers',
     description: 'Inloggen',
     path: '/login',
     loggedIn: false,
@@ -318,7 +318,7 @@ function nieuwPage({ r, loggedIn, hasPasskey }) {
   <label class="field"><span class="lab">Alt-tekst foto (voor Google &amp; schermlezers, automatisch als je niets invult)</span>
     <input class="input" name="alt_text" maxlength="200" value="${r ? esc(r.alt_text) : ''}">
   </label>
-  <div class="field"><span class="lab">Tegel-icoontjes (automatisch gekozen — tik om aan te passen)</span>
+  <div class="field"><span class="lab">Tegel-icoontjes (automatisch gekozen, tik om aan te passen)</span>
     <div class="chips" id="icon-keuze">${iconOpts}</div>
   </div>
   <div class="knoppen">
@@ -383,12 +383,12 @@ function lezenPage({ articles, papers, onderwerp, loggedIn, drafts }) {
     : `<p class="leeg">Nog geen papers in de leeslijst${onderwerp ? ` over ${esc(onderwerp)}` : ''}.</p>`;
 
   return layout({
-    title: 'Lezen — Bram Bekkers',
-    description: 'Stukken over voeding, supplementen en gezondheid, plus een leeslijst met interessante papers.',
+    title: 'Lezen · Bram Bekkers',
+    description: 'Wat ik schrijf over voeding en gezondheid, en de papers die ik bewaar.',
     path: '/lezen',
     loggedIn,
     body: `<div class="kop-rij"><h1>Lezen</h1>${loggedIn ? '<span class="knoppen"><a class="btn ghost" href="/lezen/nieuw">+ artikel</a><a class="btn ghost" href="/papers/nieuw">+ paper</a></span>' : ''}</div>
-<p class="lede">Wat ik lees en denk over voeding, supplementen en gezondheid — en de literatuur waarop het leunt.</p>
+<p class="lede">Hier zet ik neer wat me bezighoudt rond voeding en gezondheid, met de papers die ik erbij bewaar.</p>
 <div class="chips">${chips}</div>
 <h2 class="klein">Stukken</h2>
 ${artikelenBlok}
@@ -406,12 +406,12 @@ function artikelPage({ a, papersBySlug, papersList, loggedIn }) {
     ? `<section class="referenties"><h2>Besproken literatuur</h2><ul class="leeslijst">${citedPapers.map(paperItem).join('')}</ul></section>` : '';
 
   return layout({
-    title: `${a.title} — Bram Bekkers`,
+    title: `${a.title} · Bram Bekkers`,
     description: plainIntro(a.body_md),
     path: `/lezen/${a.slug}`,
     loggedIn,
     body: `<article class="stuk">
-${a.status === 'draft' ? '<p class="concept-banner">Concept — alleen jij ziet dit.</p>' : ''}
+${a.status === 'draft' ? '<p class="concept-banner">Concept, alleen jij ziet dit.</p>' : ''}
 <h1>${esc(a.title)}</h1>
 <p class="a-meta">${[datumNL(a.updated_at), ...topics].map(esc).join(' · ')}</p>
 <div class="prose">${html}</div>
