@@ -70,6 +70,7 @@ function layout({ title, description, ogImage, path: reqPath, loggedIn, body, js
 ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
 </head>
 <body>
+<header class="nav-wrap">
 <nav>
   <a class="brand" href="/" aria-label="bram bekkers, home">${WORDMARK_SVG}</a>
   <a href="/" ${reqPath === '/' ? 'class="active"' : ''}>home</a>
@@ -88,6 +89,7 @@ ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
     <svg class="maan" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="var(--navy-soft)"/></svg>
   </button>
 </nav>
+</header>
 <main>
 ${body}
 </main>
