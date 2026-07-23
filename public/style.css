@@ -126,6 +126,50 @@ a.chip.on { background: var(--navy); color: var(--chiffon); border-color: var(--
 .ingredienten input:checked + span { text-decoration: line-through; opacity: .55; }
 .stappen { padding-left: 1.3rem; display: flex; flex-direction: column; gap: .6rem; }
 
+/* Lezen: kop-rij met knop rechts */
+.kop-rij { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.kop-rij h1 { margin: 1.4rem 0 .6rem; }
+
+/* artikel-kaarten */
+.artikelen { display: flex; flex-direction: column; gap: .7rem; margin-bottom: 1.5rem; }
+.artikel-kaart {
+  display: block; background: var(--card); border: 1.5px solid var(--line);
+  border-radius: 12px; padding: .9rem 1rem; text-decoration: none; color: var(--navy);
+}
+.artikel-kaart .a-titel { font-family: "Iowan Old Style", Palatino, Georgia, serif; font-weight: 600; font-size: 1.1rem; display: block; }
+.artikel-kaart .a-meta { font-size: .78rem; color: var(--navy-soft); display: block; margin: .15rem 0 .35rem; }
+.artikel-kaart .a-intro { font-size: .9rem; color: var(--navy-soft); display: block; }
+@media (prefers-reduced-motion: no-preference) { .artikel-kaart { transition: transform .15s ease; } .artikel-kaart:hover { transform: translateY(-2px); } }
+
+/* leeslijst (papers) */
+.leeslijst { list-style: none; padding: 0; margin: 0 0 1.5rem; display: flex; flex-direction: column; gap: .8rem; }
+.paper { background: var(--card); border: 1.5px solid var(--line); border-radius: 10px; padding: .75rem .9rem; scroll-margin-top: 1rem; }
+.paper:target { outline: 2px solid var(--navy-soft); }
+.p-titel { font-weight: 600; }
+.p-titel a { text-decoration: none; }
+.p-meta { font-size: .82rem; color: var(--navy-soft); margin-top: .1rem; }
+.p-note { font-size: .9rem; margin-top: .35rem; }
+.p-topics { margin-top: .4rem; display: flex; gap: .3rem; flex-wrap: wrap; }
+.tagje { font-size: .72rem; color: var(--navy-soft); background: var(--chip-bg); border-radius: 999px; padding: .1rem .5rem; }
+
+/* artikel-tekst (prose) */
+.stuk .a-meta { color: var(--navy-soft); font-size: .82rem; margin: 0 0 1.2rem; }
+.prose { max-width: 65ch; }
+.prose h2 { font-size: 1.3rem; margin: 1.6rem 0 .5rem; }
+.prose h3 { font-size: 1.1rem; margin: 1.3rem 0 .4rem; }
+.prose p { margin: 0 0 1rem; }
+.prose ul, .prose ol { margin: 0 0 1rem; padding-left: 1.3rem; display: flex; flex-direction: column; gap: .3rem; }
+.prose a { color: var(--navy); text-underline-offset: 2px; }
+.prose blockquote { margin: 0 0 1rem; padding: .4rem 0 .4rem 1rem; border-left: 3px solid var(--line); color: var(--navy-soft); }
+.prose code { background: var(--chip-bg); padding: .1rem .35rem; border-radius: 4px; font-size: .9em; }
+.prose hr { margin: 1.6rem 0; }
+.cite { font-size: .7em; }
+.cite a { text-decoration: none; }
+.referenties { margin-top: 2.5rem; border-top: 1.5px solid var(--line); padding-top: 1rem; }
+.referenties h2 { font-size: 1.1rem; }
+textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .92rem; line-height: 1.5; }
+.form.breed { max-width: 680px; }
+
 /* formulieren */
 .form { display: flex; flex-direction: column; gap: 1rem; max-width: 560px; }
 .field { display: flex; flex-direction: column; gap: .3rem; }

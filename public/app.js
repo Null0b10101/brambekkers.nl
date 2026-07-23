@@ -91,6 +91,36 @@ if (regBtn) {
   });
 }
 
+// ── Lezen: artikel- en paper-formulieren (JSON-POST) ──────────────────────
+function koppelForm(id, endpoint, naar) {
+  const f = document.getElementById(id);
+  if (!f) return;
+  f.addEventListener('submit', (e) => e.preventDefault());
+  f.querySelectorAll('button[name=status], button[name=save]').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const fout = document.getElementById('form-fout');
+      if (fout) fout.hidden = true;
+      if (!f.reportValidity()) return;
+      const fd = new FormData(f);
+      if (btn.name === 'status') fd.set('status', btn.value);
+      if (f.dataset.bewerk) fd.set('bewerk', f.dataset.bewerk);
+      btn.disabled = true;
+      try {
+        const res = await fetch(endpoint, { method: 'POST', body: new URLSearchParams(fd) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Onbekende fout');
+        location.href = naar(data.slug);
+      } catch (err) {
+        if (fout) { fout.textContent = err.message; fout.hidden = false; }
+        btn.disabled = false;
+      }
+    });
+  });
+}
+koppelForm('artikel-form', '/api/artikelen', (slug) => '/lezen/' + slug);
+koppelForm('paper-form', '/api/papers', () => '/lezen#leeslijst');
+
 // ── /nieuw: formulier + automatische icoontjes ────────────────────────────
 const form = document.getElementById('recept-form');
 if (form) {

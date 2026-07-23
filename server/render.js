@@ -1,6 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const { ICONS, iconSvg } = require('./icons');
+const { renderMarkdown, paperShortLabel, plainIntro } = require('./markdown');
+
+// Onderwerpen delen artikelen én papers; pas deze lijst aan naar je interesses.
+const ONDERWERPEN = ['supplementen', 'ziektes', 'voeding', 'darmgezondheid', 'immuunsysteem', 'hersenen', 'metabolisme', 'hormonen'];
 
 // Wordmark-master uit het logopakket, inline met currentColor zodat hij
 // meekleurt met het thema (zie scripts/genereer-logo.js).
@@ -70,7 +74,7 @@ ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
   <a class="brand" href="/" aria-label="bram bekkers — home">${WORDMARK_SVG}</a>
   <a href="/" ${reqPath === '/' ? 'class="active"' : ''}>home</a>
   <a href="/recepten" ${reqPath.startsWith('/recept') ? 'class="active"' : ''}>recepten</a>
-  ${loggedIn ? '<a href="/nieuw" class="nav-nieuw">+ nieuw</a>' : ''}
+  <a href="/lezen" ${reqPath.startsWith('/lezen') || reqPath.startsWith('/paper') ? 'class="active"' : ''}>lezen</a>
   <button id="thema-knop" aria-label="Wissel tussen licht en donker thema" title="Licht/donker thema">
     <svg class="zon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="4.6" fill="#d9b56d"/>
@@ -146,7 +150,7 @@ function receptenPage({ recipes, q, tag, loggedIn, drafts }) {
     description: 'De recepten die ik zelf kook: doordeweeks, bakken en alles ertussenin.',
     path: '/recepten',
     loggedIn,
-    body: `<h1>Recepten</h1>
+    body: `<div class="kop-rij"><h1>Recepten</h1>${loggedIn ? '<a class="btn ghost" href="/nieuw">+ nieuw recept</a>' : ''}</div>
 <form class="zoek" method="get" action="/recepten">
   <input type="search" name="q" value="${esc(q || '')}" placeholder="Zoek op naam of ingrediënt…" aria-label="Zoeken">
   ${tag ? `<input type="hidden" name="tag" value="${esc(tag)}">` : ''}
@@ -311,4 +315,142 @@ function nieuwPage({ r, loggedIn, hasPasskey }) {
   });
 }
 
-module.exports = { layout, receptenPage, homePage, receptPage, loginPage, nieuwPage, TAGS, esc };
+// ── Lezen: artikelen + leeslijst ──────────────────────────────────────────
+function datumNL(iso) {
+  const [j, m, d] = iso.slice(0, 10).split('-');
+  const mnd = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'][+m - 1];
+  return `${+d} ${mnd} ${j}`;
+}
+
+function artikelKaart(a) {
+  const topics = JSON.parse(a.topics);
+  return `<a class="artikel-kaart" href="/lezen/${esc(a.slug)}">
+  <span class="a-titel">${esc(a.title)}</span>
+  <span class="a-meta">${[datumNL(a.updated_at), ...topics].map(esc).join(' · ')}</span>
+  <span class="a-intro">${esc(plainIntro(a.body_md))}</span>
+</a>`;
+}
+
+function paperItem(p) {
+  const topics = JSON.parse(p.topics);
+  return `<li class="paper" id="paper-${esc(p.slug)}">
+  <div class="p-titel">${p.url ? `<a href="${esc(/^https?:/i.test(p.url) ? p.url : '#')}" target="_blank" rel="noopener noreferrer">${esc(p.title)}</a>` : esc(p.title)}</div>
+  <div class="p-meta">${[esc(p.authors), p.year ? esc(String(p.year)) : '', esc(p.source)].filter(Boolean).join(' · ')}</div>
+  ${p.note ? `<div class="p-note">${esc(p.note)}</div>` : ''}
+  ${topics.length ? `<div class="p-topics">${topics.map((t) => `<span class="tagje">${esc(t)}</span>`).join('')}</div>` : ''}
+</li>`;
+}
+
+function lezenPage({ articles, papers, onderwerp, loggedIn, drafts }) {
+  const chips = ['alles', ...ONDERWERPEN].map((t) => {
+    const on = (t === 'alles' && !onderwerp) || t === onderwerp;
+    const href = t === 'alles' ? '/lezen' : `/lezen?onderwerp=${encodeURIComponent(t)}`;
+    return `<a class="chip ${on ? 'on' : ''}" href="${href}">${esc(t)}</a>`;
+  }).join('');
+
+  const artikelenBlok = articles.length
+    ? `<div class="artikelen">${articles.map(artikelKaart).join('')}</div>`
+    : `<p class="leeg">Nog geen stukken${onderwerp ? ` over ${esc(onderwerp)}` : ''}.</p>`;
+
+  const draftBlok = loggedIn && drafts.length
+    ? `<h2 class="klein">Concepten</h2><div class="artikelen">${drafts.map(artikelKaart).join('')}</div>` : '';
+
+  const papersBlok = papers.length
+    ? `<ul class="leeslijst">${papers.map(paperItem).join('')}</ul>`
+    : `<p class="leeg">Nog geen papers in de leeslijst${onderwerp ? ` over ${esc(onderwerp)}` : ''}.</p>`;
+
+  return layout({
+    title: 'Lezen — Bram Bekkers',
+    description: 'Stukken over voeding, supplementen en gezondheid, plus een leeslijst met interessante papers.',
+    path: '/lezen',
+    loggedIn,
+    body: `<div class="kop-rij"><h1>Lezen</h1>${loggedIn ? '<span class="knoppen"><a class="btn ghost" href="/lezen/nieuw">+ artikel</a><a class="btn ghost" href="/papers/nieuw">+ paper</a></span>' : ''}</div>
+<p class="lede">Wat ik lees en denk over voeding, supplementen en gezondheid — en de literatuur waarop het leunt.</p>
+<div class="chips">${chips}</div>
+<h2 class="klein">Stukken</h2>
+${artikelenBlok}
+${draftBlok}
+<h2 class="klein" id="leeslijst">Leeslijst</h2>
+${papersBlok}`
+  });
+}
+
+function artikelPage({ a, papersBySlug, papersList, loggedIn }) {
+  const topics = JSON.parse(a.topics);
+  const { html, cited } = renderMarkdown(a.body_md, papersBySlug);
+  const citedPapers = cited.map((s) => papersList.find((p) => p.slug === s)).filter(Boolean);
+  const refs = citedPapers.length
+    ? `<section class="referenties"><h2>Besproken literatuur</h2><ul class="leeslijst">${citedPapers.map(paperItem).join('')}</ul></section>` : '';
+
+  return layout({
+    title: `${a.title} — Bram Bekkers`,
+    description: plainIntro(a.body_md),
+    path: `/lezen/${a.slug}`,
+    loggedIn,
+    body: `<article class="stuk">
+${a.status === 'draft' ? '<p class="concept-banner">Concept — alleen jij ziet dit.</p>' : ''}
+<h1>${esc(a.title)}</h1>
+<p class="a-meta">${[datumNL(a.updated_at), ...topics].map(esc).join(' · ')}</p>
+<div class="prose">${html}</div>
+${refs}
+${loggedIn ? `<p><a class="btn ghost" href="/lezen/nieuw?bewerk=${esc(a.slug)}">Bewerk dit stuk</a></p>` : ''}
+</article>`
+  });
+}
+
+function artikelEditor({ a, loggedIn }) {
+  const topicOpts = ONDERWERPEN.map((t) =>
+    `<label class="chip"><input type="checkbox" name="topics" value="${t}" ${a && JSON.parse(a.topics).includes(t) ? 'checked' : ''}>${t}</label>`).join('');
+  return layout({
+    title: a ? `Bewerk: ${a.title}` : 'Nieuw artikel',
+    description: 'Artikel schrijven', path: '/lezen/nieuw', loggedIn,
+    body: `<h1>${a ? 'Artikel bewerken' : 'Nieuw artikel'}</h1>
+<form class="form breed" id="artikel-form" data-bewerk="${a ? esc(a.slug) : ''}">
+  <label class="field"><span class="lab">Titel</span>
+    <input class="input" name="title" required maxlength="160" value="${a ? esc(a.title) : ''}" placeholder="Vitamine D en het immuunsysteem"></label>
+  <div class="field"><span class="lab">Onderwerpen</span><div class="chips">${topicOpts}</div></div>
+  <label class="field"><span class="lab">Tekst (Markdown)</span>
+    <textarea class="input mono" name="body_md" rows="20" required placeholder="## Inleiding&#10;&#10;Schrijf hier je stuk. **Vet**, *cursief*, [een link](https://...).&#10;&#10;Verwijs naar een paper uit je leeslijst met [@paper-slug].">${a ? esc(a.body_md) : ''}</textarea></label>
+  <details class="beheer"><summary>Markdown-hulp</summary>
+    <p class="klein-grijs"><code>## Kop</code> · <code>### Subkop</code> · <code>**vet**</code> · <code>*cursief*</code> · <code>[tekst](url)</code> · <code>- lijst</code> · <code>1. genummerd</code> · <code>&gt; citaat</code> · <code>---</code> streep · <code>[@paper-slug]</code> verwijst naar een paper (het slug staat in de leeslijst-URL).</p>
+  </details>
+  <div class="knoppen">
+    <button class="btn" name="status" value="published">Publiceren</button>
+    <button class="btn ghost" name="status" value="draft">Opslaan als concept</button>
+  </div>
+  <p class="fout" id="form-fout" hidden></p>
+</form>`
+  });
+}
+
+function paperEditor({ p, loggedIn }) {
+  const topicOpts = ONDERWERPEN.map((t) =>
+    `<label class="chip"><input type="checkbox" name="topics" value="${t}" ${p && JSON.parse(p.topics).includes(t) ? 'checked' : ''}>${t}</label>`).join('');
+  return layout({
+    title: p ? `Bewerk paper: ${p.title}` : 'Nieuwe paper', description: 'Paper toevoegen',
+    path: '/papers/nieuw', loggedIn,
+    body: `<h1>${p ? 'Paper bewerken' : 'Paper toevoegen'}</h1>
+<form class="form" id="paper-form" data-bewerk="${p ? esc(p.slug) : ''}">
+  <label class="field"><span class="lab">Titel</span>
+    <input class="input" name="title" required maxlength="300" value="${p ? esc(p.title) : ''}"></label>
+  <label class="field"><span class="lab">Auteurs</span>
+    <input class="input" name="authors" maxlength="300" value="${p ? esc(p.authors) : ''}" placeholder="Boer J, Jansen A"></label>
+  <div class="field-rij">
+    <label class="field"><span class="lab">Jaar</span>
+      <input class="input" name="year" type="number" min="1900" max="2100" inputmode="numeric" value="${p?.year || ''}"></label>
+    <label class="field"><span class="lab">Tijdschrift / bron</span>
+      <input class="input" name="source" maxlength="200" value="${p ? esc(p.source) : ''}" placeholder="The Lancet"></label>
+  </div>
+  <label class="field"><span class="lab">Link (URL of DOI)</span>
+    <input class="input" name="url" maxlength="500" value="${p ? esc(p.url) : ''}" placeholder="https://doi.org/..."></label>
+  <div class="field"><span class="lab">Onderwerpen</span><div class="chips">${topicOpts}</div></div>
+  <label class="field"><span class="lab">Jouw notitie (waarom interessant?)</span>
+    <textarea class="input" name="note" rows="4" maxlength="1000">${p ? esc(p.note) : ''}</textarea></label>
+  <div class="knoppen"><button class="btn" name="save" value="1">Opslaan</button></div>
+  <p class="fout" id="form-fout" hidden></p>
+</form>`
+  });
+}
+
+module.exports = { layout, receptenPage, homePage, receptPage, loginPage, nieuwPage,
+  lezenPage, artikelPage, artikelEditor, paperEditor, TAGS, ONDERWERPEN, esc };

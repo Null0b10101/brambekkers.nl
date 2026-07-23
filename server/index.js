@@ -12,6 +12,7 @@ const auth = require('./auth');
 const { suggestIcons, ICONS } = require('./icons');
 const { processPhoto, removePhoto } = require('./photos');
 const { generateOgImage } = require('./ogimage');
+const { paperShortLabel: mdShortLabel } = require('./markdown');
 const view = require('./render');
 
 const PORT = process.env.PORT || 3002;
@@ -105,6 +106,96 @@ app.get('/login', (req, res) => {
 app.get('/nieuw', auth.requireAuth, (req, res) => {
   const r = req.query.bewerk ? getRecipe(req.query.bewerk) : null;
   res.send(view.nieuwPage({ r, loggedIn: true, hasPasskey: hasPasskey() }));
+});
+
+// ── Lezen: artikelen + leeslijst ──────────────────────────────────────────
+const getArticle = (slug) => db.prepare('SELECT * FROM articles WHERE slug = ?').get(slug);
+const getPaper = (slug) => db.prepare('SELECT * FROM papers WHERE slug = ?').get(slug);
+function slugifyIn(table, name, fallback) {
+  const base = name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || fallback;
+  let slug = base, n = 2;
+  while (db.prepare(`SELECT 1 FROM ${table} WHERE slug = ?`).get(slug)) slug = `${base}-${n++}`;
+  return slug;
+}
+
+app.get('/lezen', (req, res) => {
+  const onderwerp = view.ONDERWERPEN.includes(req.query.onderwerp) ? req.query.onderwerp : '';
+  const loggedIn = auth.isLoggedIn(req);
+  const like = onderwerp ? `%"${onderwerp}"%` : null;
+  const aSql = "SELECT * FROM articles WHERE status = 'published'" + (onderwerp ? ' AND topics LIKE ?' : '') + ' ORDER BY updated_at DESC';
+  const pSql = 'SELECT * FROM papers' + (onderwerp ? ' WHERE topics LIKE ?' : '') + ' ORDER BY year DESC, created_at DESC';
+  const articles = onderwerp ? db.prepare(aSql).all(like) : db.prepare(aSql).all();
+  const papers = onderwerp ? db.prepare(pSql).all(like) : db.prepare(pSql).all();
+  const drafts = loggedIn ? db.prepare("SELECT * FROM articles WHERE status = 'draft' ORDER BY updated_at DESC").all() : [];
+  res.send(view.lezenPage({ articles, papers, onderwerp, loggedIn, drafts }));
+});
+
+app.get('/lezen/nieuw', auth.requireAuth, (req, res) => {
+  const a = req.query.bewerk ? getArticle(req.query.bewerk) : null;
+  res.send(view.artikelEditor({ a, loggedIn: true }));
+});
+
+app.get('/papers/nieuw', auth.requireAuth, (req, res) => {
+  const p = req.query.bewerk ? getPaper(req.query.bewerk) : null;
+  res.send(view.paperEditor({ p, loggedIn: true }));
+});
+
+app.get('/lezen/:slug', (req, res) => {
+  const a = getArticle(req.params.slug);
+  const loggedIn = auth.isLoggedIn(req);
+  if (!a || (a.status === 'draft' && !loggedIn)) return res.status(404).send(view.layout({
+    title: 'Niet gevonden', description: '', path: req.path, loggedIn,
+    body: '<h1>Stuk niet gevonden</h1><p><a href="/lezen">Terug naar Lezen</a></p>'
+  }));
+  const papersList = db.prepare('SELECT * FROM papers').all();
+  const papersBySlug = Object.fromEntries(papersList.map((p) => [p.slug, { shortLabel: mdShortLabel(p.authors, p.year) }]));
+  res.send(view.artikelPage({ a, papersBySlug, papersList, loggedIn }));
+});
+
+app.post('/api/artikelen', auth.requireAuth, auth.checkOrigin, express.urlencoded({ extended: false, limit: '512kb' }), (req, res) => {
+  try {
+    const title = (req.body.title || '').trim().slice(0, 160);
+    if (!title) return res.status(400).json({ error: 'Titel is verplicht.' });
+    const body_md = (req.body.body_md || '').slice(0, 100000);
+    const topics = [].concat(req.body.topics || []).filter((t) => view.ONDERWERPEN.includes(t));
+    const status = req.body.status === 'draft' ? 'draft' : 'published';
+    const now = new Date().toISOString();
+    const existing = req.body.bewerk ? getArticle(req.body.bewerk) : null;
+    const slug = existing ? existing.slug : slugifyIn('articles', title, 'artikel');
+    if (existing) {
+      db.prepare('UPDATE articles SET title=?, body_md=?, topics=?, status=?, updated_at=? WHERE slug=?')
+        .run(title, body_md, JSON.stringify(topics), status, now, slug);
+    } else {
+      db.prepare('INSERT INTO articles (slug, title, body_md, topics, status, created_at, updated_at) VALUES (?,?,?,?,?,?,?)')
+        .run(slug, title, body_md, JSON.stringify(topics), status, now, now);
+    }
+    res.json({ ok: true, slug });
+  } catch (e) { console.error('Artikel opslaan mislukt:', e); res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/papers', auth.requireAuth, auth.checkOrigin, (req, res) => {
+  try {
+    const title = (req.body.title || '').trim().slice(0, 300);
+    if (!title) return res.status(400).json({ error: 'Titel is verplicht.' });
+    const authors = (req.body.authors || '').trim().slice(0, 300);
+    const year = Math.min(2100, Math.max(1900, parseInt(req.body.year, 10) || 0)) || null;
+    const source = (req.body.source || '').trim().slice(0, 200);
+    const url = (req.body.url || '').trim().slice(0, 500);
+    const note = (req.body.note || '').trim().slice(0, 1000);
+    const topics = [].concat(req.body.topics || []).filter((t) => view.ONDERWERPEN.includes(t));
+    const now = new Date().toISOString();
+    const existing = req.body.bewerk ? getPaper(req.body.bewerk) : null;
+    const slug = existing ? existing.slug : slugifyIn('papers', title, 'paper');
+    if (existing) {
+      db.prepare('UPDATE papers SET title=?, authors=?, year=?, source=?, url=?, note=?, topics=?, updated_at=? WHERE slug=?')
+        .run(title, authors, year, source, url, note, JSON.stringify(topics), now, slug);
+    } else {
+      db.prepare('INSERT INTO papers (slug, title, authors, year, source, url, note, topics, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
+        .run(slug, title, authors, year, source, url, note, JSON.stringify(topics), now, now);
+    }
+    res.json({ ok: true, slug });
+  } catch (e) { console.error('Paper opslaan mislukt:', e); res.status(500).json({ error: e.message }); }
 });
 
 // ── auth: wachtwoord ──────────────────────────────────────────────────────
@@ -246,10 +337,13 @@ app.post('/api/recepten', auth.requireAuth, auth.checkOrigin, upload.single('pho
 // ── SEO ───────────────────────────────────────────────────────────────────
 app.get('/sitemap.xml', (req, res) => {
   const rows = db.prepare("SELECT slug, updated_at, has_photo FROM recipes WHERE status = 'published'").all();
+  const arts = db.prepare("SELECT slug, updated_at FROM articles WHERE status = 'published'").all();
   const urls = [
     `<url><loc>${ORIGIN}/</loc></url>`,
     `<url><loc>${ORIGIN}/recepten</loc></url>`,
-    ...rows.map((r) => `<url><loc>${ORIGIN}/recept/${r.slug}</loc><lastmod>${r.updated_at.slice(0, 10)}</lastmod>${r.has_photo ? `<image:image><image:loc>${ORIGIN}/foto/${r.slug}/crop-4x3.jpg</image:loc></image:image>` : ''}</url>`)
+    `<url><loc>${ORIGIN}/lezen</loc></url>`,
+    ...rows.map((r) => `<url><loc>${ORIGIN}/recept/${r.slug}</loc><lastmod>${r.updated_at.slice(0, 10)}</lastmod>${r.has_photo ? `<image:image><image:loc>${ORIGIN}/foto/${r.slug}/crop-4x3.jpg</image:loc></image:image>` : ''}</url>`),
+    ...arts.map((a) => `<url><loc>${ORIGIN}/lezen/${a.slug}</loc><lastmod>${a.updated_at.slice(0, 10)}</lastmod></url>`)
   ].join('\n');
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
@@ -258,7 +352,7 @@ ${urls}
 });
 
 app.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /nieuw\nDisallow: /login\nSitemap: ${ORIGIN}/sitemap.xml\n`);
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /nieuw\nDisallow: /login\nDisallow: /lezen/nieuw\nDisallow: /papers/nieuw\nSitemap: ${ORIGIN}/sitemap.xml\n`);
 });
 
 // Site-brede og-image (homepagina) eenmalig genereren.
