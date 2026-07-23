@@ -6,7 +6,7 @@ if (themaKnop) {
   themaKnop.addEventListener('click', () => {
     const root = document.documentElement;
     const nieuw = root.dataset.theme === 'dark' ? 'light' : 'dark';
-    root.dataset.theme = nieuw;
+    zetThema(nieuw);
     try { localStorage.setItem('thema', nieuw); } catch (e) {}
   });
 }

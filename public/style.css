@@ -17,15 +17,24 @@
     --chiffon: #0A2C4C; --navy: #F5EBC8; --navy-soft: #B9C8DB;
     --navy-faint: #f5ebc81f; --card: #0E3459; --line: #f5ebc83a;
     --chip-bg: #f5ebc814; --fout: #ff9b8a;
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --chiffon: #0A2C4C; --navy: #F5EBC8; --navy-soft: #B9C8DB;
   --navy-faint: #f5ebc81f; --card: #0E3459; --line: #f5ebc83a;
   --chip-bg: #f5ebc814; --fout: #ff9b8a;
+  color-scheme: dark;
+}
+/* Vloeiende overgang tussen pagina's: de browser houdt de oude pagina vast en
+   vloeit over naar de nieuwe (samen met de vroege achtergrond in theme.js
+   verdwijnt zo de witte flits bij het navigeren). */
+@view-transition { navigation: auto; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 }
 * { box-sizing: border-box; }
-html { background: var(--chiffon); }
+html { background: var(--chiffon); color-scheme: light; }
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
