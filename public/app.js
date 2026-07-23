@@ -1,5 +1,16 @@
 // brambekkers.nl — client-side gedrag (progressive enhancement)
 
+// ── thema wisselen (zon/maan in de navigatie) ─────────────────────────────
+const themaKnop = document.getElementById('thema-knop');
+if (themaKnop) {
+  themaKnop.addEventListener('click', () => {
+    const root = document.documentElement;
+    const nieuw = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = nieuw;
+    try { localStorage.setItem('thema', nieuw); } catch (e) {}
+  });
+}
+
 // ── ingrediënten afvinken, onthouden per recept ───────────────────────────
 const recept = document.querySelector('.recept[data-slug]');
 if (recept) {

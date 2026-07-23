@@ -1,4 +1,12 @@
+const fs = require('fs');
+const path = require('path');
 const { ICONS, iconSvg } = require('./icons');
+
+// Wordmark-master uit het logopakket, inline met currentColor zodat hij
+// meekleurt met het thema (zie scripts/genereer-logo.js).
+const WORDMARK_SVG = fs.readFileSync(path.join(__dirname, '..', 'logo', 'vector', 'navy', 'bb-wordmark.svg'), 'utf8')
+  .replace('stroke="#0D3B66"', 'stroke="currentColor"')
+  .replace('<svg ', '<svg class="wordmark" aria-hidden="true" focusable="false" ');
 
 const TAGS = ['ontbijt', 'lunch', 'diner', 'voorgerecht', 'hoofdgerecht', 'bijgerecht', 'nagerecht', 'bakken', 'vega'];
 const SITE = 'https://brambekkers.nl';
@@ -31,15 +39,21 @@ function layout({ title, description, ogImage, path: reqPath, loggedIn, body, js
 <meta property="og:url" content="${SITE}${esc(reqPath)}">
 <meta property="og:type" content="website">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script src="/theme.js"></script>
 <link rel="stylesheet" href="/style.css">
 ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
 </head>
 <body>
 <nav>
-  <a class="brand" href="/">bram bekkers</a>
+  <a class="brand" href="/" aria-label="bram bekkers — home">${WORDMARK_SVG}</a>
   <a href="/" ${reqPath === '/' ? 'class="active"' : ''}>home</a>
   <a href="/recepten" ${reqPath.startsWith('/recept') ? 'class="active"' : ''}>recepten</a>
   ${loggedIn ? '<a href="/nieuw" class="nav-nieuw">+ nieuw</a>' : ''}
+  <button id="thema-knop" aria-label="Wissel tussen licht en donker thema">
+    <svg class="zon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12h2.5M19 12h2.5M5 5l1.8 1.8M17.2 17.2L19 19M19 5l-1.8 1.8M6.8 17.2L5 19"/></svg>
+    <svg class="maan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  </button>
 </nav>
 <main>
 ${body}
