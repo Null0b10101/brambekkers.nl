@@ -91,10 +91,17 @@ function paperShortLabel(authors, year) {
   return year ? `${naam} ${year}` : naam;
 }
 
-// Eerste alinea platte tekst als samenvatting voor de kaartjes.
+// Eerste échte alinea als platte-tekst samenvatting voor de kaartjes en de
+// meta-omschrijving. Slaat koppen/citaten over en laat koppeltekens in woorden
+// (komkommer-radijssalade) intact.
 function plainIntro(md, max = 160) {
-  const t = String(md).replace(/\r\n/g, '\n').split('\n\n')[0]
-    .replace(/[#>*`_-]/g, '').replace(/\[@[a-z0-9-]+\]/gi, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+  const blocks = String(md).replace(/\r\n/g, '\n').split(/\n{2,}/);
+  const first = blocks.find((b) => b.trim() && !/^\s*(#{1,6}\s|>)/.test(b)) || blocks[0] || '';
+  const t = first
+    .replace(/^\s*(?:[-*]|\d+\.)\s+/gm, '')       // lijstmarkers aan regelbegin
+    .replace(/[*`_]/g, '')                         // nadruk-/code-tekens
+    .replace(/\[@[a-z0-9-]+\]/gi, '')              // literatuurverwijzingen
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')       // links → linktekst
     .replace(/\s+/g, ' ').trim();
   return t.length > max ? t.slice(0, max - 1).trimEnd() + '…' : t;
 }

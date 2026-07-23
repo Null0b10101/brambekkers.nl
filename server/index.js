@@ -154,7 +154,7 @@ app.get('/lezen/:slug', (req, res) => {
   res.send(view.artikelPage({ a, papersBySlug, papersList, loggedIn }));
 });
 
-app.post('/api/artikelen', auth.requireAuth, auth.checkOrigin, express.urlencoded({ extended: false, limit: '512kb' }), (req, res) => {
+app.post('/api/artikelen', auth.requireAuth, auth.checkOrigin, (req, res) => {
   try {
     const title = (req.body.title || '').trim().slice(0, 160);
     if (!title) return res.status(400).json({ error: 'Titel is verplicht.' });
@@ -172,7 +172,7 @@ app.post('/api/artikelen', auth.requireAuth, auth.checkOrigin, express.urlencode
         .run(slug, title, body_md, JSON.stringify(topics), status, now, now);
     }
     res.json({ ok: true, slug });
-  } catch (e) { console.error('Artikel opslaan mislukt:', e); res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('Artikel opslaan mislukt:', e); res.status(500).json({ error: 'Opslaan mislukt, probeer het opnieuw.' }); }
 });
 
 app.post('/api/papers', auth.requireAuth, auth.checkOrigin, (req, res) => {
@@ -196,7 +196,7 @@ app.post('/api/papers', auth.requireAuth, auth.checkOrigin, (req, res) => {
         .run(slug, title, authors, year, source, url, note, JSON.stringify(topics), now, now);
     }
     res.json({ ok: true, slug });
-  } catch (e) { console.error('Paper opslaan mislukt:', e); res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('Paper opslaan mislukt:', e); res.status(500).json({ error: 'Opslaan mislukt, probeer het opnieuw.' }); }
 });
 
 // ── auth: wachtwoord ──────────────────────────────────────────────────────
@@ -331,7 +331,7 @@ app.post('/api/recepten', auth.requireAuth, auth.checkOrigin, upload.single('pho
     res.json({ ok: true, slug });
   } catch (e) {
     console.error('Opslaan mislukt:', e);
-    res.status(500).json({ error: 'Opslaan mislukt: ' + e.message });
+    res.status(500).json({ error: 'Opslaan mislukt, probeer het opnieuw.' });
   }
 });
 
