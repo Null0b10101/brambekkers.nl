@@ -36,6 +36,16 @@ const ICONS = {
     match: ['pompoen', 'flespompoen', 'butternut'],
     svg: '<ellipse cx="32" cy="38" rx="20" ry="15"/><path d="M32 24v29M22 25q-4 13 0 26M42 25q4 13 0 26M32 23v-7q0-4 6-4"/>'
   },
+  komkommer: {
+    label: 'komkommer',
+    match: ['komkommer', 'augurk'],
+    svg: '<path d="M14 47q-6-6 1-12l23-20q7-6 12-1q5 5-1 12L26 48q-6 5-12-1z"/><path d="M24 38h.1M32 31h.1M40 24h.1"/>'
+  },
+  radijs: {
+    label: 'radijs',
+    match: ['radijs', 'radijsjes', 'rammenas'],
+    svg: '<circle cx="32" cy="38" r="13"/><path d="M32 51v9M32 25v-3M32 22q-3-9-10-11M32 22q3-9 10-11"/>'
+  },
   courgette: {
     label: 'courgette',
     match: ['courgette'],
@@ -138,17 +148,20 @@ const ICONS = {
   }
 };
 
-// Kies automatisch max 3 icoontjes op basis van de ingrediëntentekst.
+// Kies automatisch max 3 icoontjes op basis van de ingrediëntentekst,
+// in de volgorde waarin ze in de lijst staan (hoofdingrediënt staat meestal bovenaan).
 function suggestIcons(ingredientsText) {
   const t = (ingredientsText || '').toLowerCase();
   const found = [];
   for (const [key, icon] of Object.entries(ICONS)) {
-    if (icon.match.some((w) => new RegExp(`(^|[^a-zà-ü])${w}([^a-zà-ü]|$)`).test(t))) {
-      found.push(key);
-      if (found.length === 3) break;
+    let pos = Infinity;
+    for (const w of icon.match) {
+      const m = t.match(new RegExp(`(^|[^a-zà-ü])${w}([^a-zà-ü]|$)`));
+      if (m && m.index < pos) pos = m.index;
     }
+    if (pos !== Infinity) found.push({ key, pos });
   }
-  return found;
+  return found.sort((a, b) => a.pos - b.pos).slice(0, 3).map((f) => f.key);
 }
 
 function iconSvg(key, size = 64, cls = '') {
