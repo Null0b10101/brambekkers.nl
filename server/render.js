@@ -163,9 +163,7 @@ function homePage({ latest, loggedIn }) {
     description: 'Persoonlijke site van Bram Bekkers, met de recepten die ik zelf kook.',
     path: '/',
     loggedIn,
-    body: `<h1>Hoi, ik ben Bram.</h1>
-<p class="lede">Hier verzamel ik de recepten die ik zelf kook — zodat ik ze terugvind, en jij ze mee kunt koken.</p>
-<p><a class="btn" href="/recepten">Bekijk alle recepten</a></p>
+    body: `<p><a class="btn" href="/recepten">Bekijk alle recepten</a></p>
 ${latest.length ? `<h2 class="klein">Nieuwste recepten</h2><div class="grid">${latest.map(tile).join('')}</div>` : ''}`
   });
 }
