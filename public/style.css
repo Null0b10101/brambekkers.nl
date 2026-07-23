@@ -49,7 +49,12 @@ nav {
 nav a { color: var(--navy-soft); text-decoration: none; font-size: .95rem; }
 nav .brand { color: var(--navy); display: flex; }
 nav .wordmark { height: 24px; width: auto; display: block; }
-nav a.active { color: var(--navy); font-weight: 600; }
+/* Actieve pagina: kiezeltje — zelfde organische blobvorm als de themaknop. */
+nav a.active {
+  color: var(--navy); font-weight: 600; background: var(--navy-faint);
+  padding: .3rem .75rem; margin: -.3rem -.2rem;
+  border-radius: 46% 54% 52% 48% / 55% 50% 50% 45%;
+}
 nav .nav-nieuw { font-weight: 600; color: var(--navy); }
 /* Themaknop: kiezeltje zoals op prikkelmap.nl — organische blobvorm met
    één gevuld icoon (maan in licht thema, zon in donker). */
