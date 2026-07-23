@@ -147,7 +147,7 @@ function receptenPage({ recipes, q, tag, loggedIn, drafts }) {
 
   return layout({
     title: 'Recepten · Bram Bekkers',
-    description: 'De recepten die ik kook en niet wil kwijtraken.',
+    description: 'Beproefde recepten uit mijn eigen keuken, voor doordeweeks en voor het weekend.',
     path: '/recepten',
     loggedIn,
     body: `<div class="kop-rij"><h1>Recepten</h1>${loggedIn ? '<a class="btn ghost" href="/nieuw">+ nieuw recept</a>' : ''}</div>
@@ -175,18 +175,18 @@ function homePage({ latest, latestArticle, loggedIn }) {
 
   return layout({
     title: 'Bram Bekkers',
-    description: 'Mijn recepten, en wat ik lees en schrijf over voeding en gezondheid.',
+    description: 'Beproefde recepten en goed onderbouwde stukken over voeding en gezondheid.',
     path: '/',
     loggedIn,
     body: `<div class="ingangen">
   <a class="ingang" href="/recepten">
     <span class="art">${ART_RECEPT}</span>
-    <span class="ingang-tekst"><span class="i-titel">Recepten</span><span class="i-uitleg">De dingen die ik kook en wil onthouden.</span></span>
+    <span class="ingang-tekst"><span class="i-titel">Recepten</span><span class="i-uitleg">Beproefde recepten uit mijn eigen keuken.</span></span>
     <span class="ga">Bekijk recepten →</span>
   </a>
   <a class="ingang" href="/lezen">
     <span class="art">${ART_LEZEN}</span>
-    <span class="ingang-tekst"><span class="i-titel">Lezen</span><span class="i-uitleg">Wat ik lees en schrijf over voeding en gezondheid.</span></span>
+    <span class="ingang-tekst"><span class="i-titel">Lezen</span><span class="i-uitleg">Onderbouwde stukken over voeding en gezondheid, met de bronnen erbij.</span></span>
     <span class="ga">Ga naar Lezen →</span>
   </a>
 </div>
@@ -384,11 +384,11 @@ function lezenPage({ articles, papers, onderwerp, loggedIn, drafts }) {
 
   return layout({
     title: 'Lezen · Bram Bekkers',
-    description: 'Wat ik schrijf over voeding en gezondheid, en de papers die ik bewaar.',
+    description: 'Onderbouwde stukken over voeding en gezondheid, plus een leeslijst met de papers erachter.',
     path: '/lezen',
     loggedIn,
     body: `<div class="kop-rij"><h1>Lezen</h1>${loggedIn ? '<span class="knoppen"><a class="btn ghost" href="/lezen/nieuw">+ artikel</a><a class="btn ghost" href="/papers/nieuw">+ paper</a></span>' : ''}</div>
-<p class="lede">Hier zet ik neer wat me bezighoudt rond voeding en gezondheid, met de papers die ik erbij bewaar.</p>
+<p class="lede">Ik graaf in de wetenschap achter voeding en gezondheid en schrijf op wat ik vind. De papers die ertoe doen, staan in de leeslijst.</p>
 <div class="chips">${chips}</div>
 <h2 class="klein">Stukken</h2>
 ${artikelenBlok}
