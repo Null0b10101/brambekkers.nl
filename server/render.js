@@ -87,11 +87,27 @@ ${body}
 </html>`;
 }
 
+// Tegel-illustratie: "dansend trio" — zelfde ritme als het logo (om en om
+// omhoog/omlaag, licht gekanteld), hoofdingrediënt het grootst. Eén svg die
+// meeschaalt met de tegel; stroke per groep gecompenseerd zodat de lijndikte
+// overal gelijk blijft (monolijn, net als het logo).
+function tileArt(keys) {
+  const posities = {
+    3: [{ x: 12, y: 26, s: 1.42, r: -6 }, { x: 82, y: 46, s: 1.08, r: 5 }, { x: 136, y: 26, s: 0.92, r: -4 }],
+    2: [{ x: 30, y: 28, s: 1.42, r: -6 }, { x: 108, y: 44, s: 1.12, r: 5 }],
+    1: [{ x: 55, y: 28, s: 1.42, r: -5 }]
+  }[Math.min(keys.length, 3)] || [];
+  const groepen = keys.slice(0, 3).map((k, i) => {
+    const p = posities[i];
+    return `<g transform="translate(${p.x} ${p.y}) scale(${p.s}) rotate(${p.r} 32 32)" stroke-width="${(4 / p.s).toFixed(2)}">${ICONS[k].svg}</g>`;
+  }).join('');
+  return `<svg viewBox="0 0 200 150" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${groepen}</svg>`;
+}
+
 function tile(r) {
-  const icons = JSON.parse(r.icons).map((k) => iconSvg(k, 56)).join('');
   const art = r.has_photo
     ? `<img src="/foto/${esc(r.slug)}/w400.webp" alt="" loading="lazy" width="400" height="300">`
-    : `<div class="tile-icons">${icons}</div>`;
+    : `<div class="tile-icons">${tileArt(JSON.parse(r.icons))}</div>`;
   return `<a class="tile" href="/recept/${esc(r.slug)}">
   <span class="art">${art}</span>
   <span class="body">
@@ -156,7 +172,10 @@ function receptPage({ r, loggedIn }) {
   <source type="image/webp" srcset="/foto/${esc(r.slug)}/w400.webp 400w, /foto/${esc(r.slug)}/w800.webp 800w, /foto/${esc(r.slug)}/w1600.webp 1600w" sizes="(max-width: 760px) 100vw, 720px">
   <img class="hero" src="/foto/${esc(r.slug)}/fallback.jpg" alt="${esc(r.alt_text || r.name)}" width="1600" height="1200">
 </picture>`
-    : `<div class="hero illu">${iconKeys.map((k) => iconSvg(k, 96)).join('')}</div>`;
+    : `<div class="hero illu">${iconKeys.map((k, i) => {
+        const dans = [{ y: -8, r: -6, m: 110 }, { y: 9, r: 5, m: 88 }, { y: -6, r: -4, m: 82 }][i] || { y: 0, r: 0, m: 88 };
+        return `<span style="display:inline-flex;transform:translateY(${dans.y}px) rotate(${dans.r}deg)">${iconSvg(k, dans.m)}</span>`;
+      }).join('')}</div>`;
 
   const jsonLd = JSON.stringify({
     '@context': 'https://schema.org',

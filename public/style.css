@@ -105,7 +105,8 @@ a.chip.on { background: var(--navy); color: var(--chiffon); border-color: var(--
 }
 .tile .art { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; background: var(--navy-faint); }
 .tile .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.tile-icons { display: flex; gap: .5rem; align-items: center; justify-content: center; flex-wrap: wrap; padding: .5rem; }
+.tile-icons { width: 100%; height: 100%; }
+.tile-icons svg { width: 100%; height: 100%; display: block; }
 .tile .body { padding: .55rem .75rem .7rem; display: block; }
 .tile .name { font-weight: 600; font-size: .98rem; line-height: 1.25; display: block; }
 .tile .meta { font-size: .78rem; color: var(--navy-soft); display: block; margin-top: .2rem; }
