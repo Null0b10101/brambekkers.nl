@@ -161,14 +161,37 @@ ${draftBlock}`
   });
 }
 
-function homePage({ latest, loggedIn }) {
+// Illustraties voor de twee ingangen — monolijn, zelfde taal als de icoontjes.
+const ART_RECEPT = `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="24" cy="38" r="13"/><path d="M18 27q6-4 12 0M24 25v-6"/><ellipse cx="45" cy="40" rx="10" ry="13"/><path d="M45 27v-6q0-3 4-3"/></svg>`;
+const ART_LEZEN = `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M32 18C26 13 16 13 10 15v34c6-2 16-2 22 3 6-5 16-5 22-3V15c-6-2-16-2-22 3z"/><path d="M32 21v29"/></svg>`;
+
+function homePage({ latest, latestArticle, loggedIn }) {
+  const nieuwsteRecepten = latest.length
+    ? `<h2 class="klein">Nieuwste recepten <a href="/recepten">alle recepten →</a></h2><div class="grid">${latest.map(tile).join('')}</div>`
+    : '';
+  const nieuwsteStuk = latestArticle
+    ? `<h2 class="klein">Laatste stuk <a href="/lezen">naar Lezen →</a></h2>${artikelKaart(latestArticle)}`
+    : '';
+
   return layout({
     title: 'Bram Bekkers',
-    description: 'Persoonlijke site van Bram Bekkers, met de recepten die ik zelf kook.',
+    description: 'Persoonlijke site van Bram Bekkers: recepten die ik kook en stukken die ik lees over voeding en gezondheid.',
     path: '/',
     loggedIn,
-    body: `<p><a class="btn" href="/recepten">Bekijk alle recepten</a></p>
-${latest.length ? `<h2 class="klein">Nieuwste recepten</h2><div class="grid">${latest.map(tile).join('')}</div>` : ''}`
+    body: `<div class="ingangen">
+  <a class="ingang" href="/recepten">
+    <span class="art">${ART_RECEPT}</span>
+    <span class="ingang-tekst"><span class="i-titel">Recepten</span><span class="i-uitleg">Wat ik kook — doordeweeks, bakken en alles ertussenin.</span></span>
+    <span class="ga">Bekijk recepten →</span>
+  </a>
+  <a class="ingang" href="/lezen">
+    <span class="art">${ART_LEZEN}</span>
+    <span class="ingang-tekst"><span class="i-titel">Lezen</span><span class="i-uitleg">Stukken over voeding &amp; gezondheid, plus een leeslijst.</span></span>
+    <span class="ga">Ga naar Lezen →</span>
+  </a>
+</div>
+${nieuwsteRecepten}
+${nieuwsteStuk}`
   });
 }
 

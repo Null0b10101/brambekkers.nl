@@ -70,7 +70,8 @@ const hasPasskey = () => !!db.prepare('SELECT 1 FROM credentials LIMIT 1').get()
 // ── pagina's ──────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
   const latest = db.prepare("SELECT * FROM recipes WHERE status = 'published' ORDER BY created_at DESC LIMIT 3").all();
-  res.send(view.homePage({ latest, loggedIn: auth.isLoggedIn(req) }));
+  const latestArticle = db.prepare("SELECT * FROM articles WHERE status = 'published' ORDER BY updated_at DESC LIMIT 1").get();
+  res.send(view.homePage({ latest, latestArticle, loggedIn: auth.isLoggedIn(req) }));
 });
 
 app.get('/recepten', (req, res) => {

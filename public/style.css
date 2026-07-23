@@ -126,6 +126,26 @@ a.chip.on { background: var(--navy); color: var(--chiffon); border-color: var(--
 .ingredienten input:checked + span { text-decoration: line-through; opacity: .55; }
 .stappen { padding-left: 1.3rem; display: flex; flex-direction: column; gap: .6rem; }
 
+/* Homepage: twee ingangen */
+.ingangen { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; margin: 1.6rem 0 .6rem; }
+.ingang {
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 14px;
+  padding: 1.1rem; text-decoration: none; color: var(--navy);
+  display: flex; flex-direction: column; gap: .6rem;
+}
+.ingang .art { aspect-ratio: 16 / 10; background: var(--navy-faint); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.ingang .art svg { width: 60%; height: 60%; color: var(--navy); }
+.ingang-tekst { display: flex; flex-direction: column; gap: .2rem; }
+.i-titel { font-family: "Iowan Old Style", Palatino, Georgia, serif; font-weight: 600; font-size: 1.15rem; }
+.i-uitleg { font-size: .85rem; color: var(--navy-soft); }
+.ingang .ga { font-size: .85rem; font-weight: 600; margin-top: auto; }
+@media (prefers-reduced-motion: no-preference) { .ingang { transition: transform .15s ease; } .ingang:hover { transform: translateY(-2px); } }
+@media (max-width: 400px) { .ingangen { grid-template-columns: 1fr; } .ingang { flex-direction: row; align-items: center; } .ingang .art { width: 84px; flex: none; aspect-ratio: 1; } .ingang .ga { margin: 0 0 0 auto; } }
+
+/* "alle recepten →"-link rechts in een sectiekop */
+h2.klein .meer, h2.klein > a { float: right; font-size: .8rem; font-weight: 400; color: var(--navy-soft); text-decoration: none; margin-top: .2rem; }
+h2.klein > a:hover { color: var(--navy); }
+
 /* Lezen: kop-rij met knop rechts */
 .kop-rij { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .kop-rij h1 { margin: 1.4rem 0 .6rem; }
