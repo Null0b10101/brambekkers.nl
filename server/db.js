@@ -72,4 +72,9 @@ CREATE TABLE IF NOT EXISTS credentials (
 );
 `);
 
+// Migratie 2026-07: actieve tijd (hands-on) naast totale tijd; time_min is
+// sindsdien de totale tijd in exacte minuten (was: bovengrens van een tijdvak).
+const recipeCols = db.prepare('PRAGMA table_info(recipes)').all().map((c) => c.name);
+if (!recipeCols.includes('active_min')) db.exec('ALTER TABLE recipes ADD COLUMN active_min INTEGER');
+
 module.exports = { db, DATA_DIR };

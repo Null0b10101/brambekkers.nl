@@ -303,6 +303,9 @@ app.post('/api/recepten', auth.requireAuth, auth.checkOrigin, upload.single('pho
     const name = (req.body.name || '').trim().slice(0, 120);
     if (!name) return res.status(400).json({ error: 'Naam is verplicht.' });
     const time_min = Math.min(1440, Math.max(0, parseInt(req.body.time_min, 10) || 0)) || null;
+    const active_min = Math.min(1440, Math.max(0, parseInt(req.body.active_min, 10) || 0)) || null;
+    if (active_min && time_min && active_min > time_min)
+      return res.status(400).json({ error: 'Actieve tijd kan niet groter zijn dan de totale tijd.' });
     const servings = (req.body.servings || '').trim().slice(0, 40);
     const ingredients = (req.body.ingredients || '').trim().slice(0, 5000);
     const steps = (req.body.steps || '').trim().slice(0, 10000);
@@ -321,11 +324,11 @@ app.post('/api/recepten', auth.requireAuth, auth.checkOrigin, upload.single('pho
     const alt_text = (req.body.alt_text || '').trim().slice(0, 200) || (has_photo ? name : '');
 
     if (existing) {
-      db.prepare(`UPDATE recipes SET name=?, time_min=?, servings=?, tags=?, ingredients=?, steps=?, icons=?, has_photo=?, alt_text=?, status=?, updated_at=? WHERE slug=?`)
-        .run(name, time_min, servings, JSON.stringify(tags), ingredients, steps, JSON.stringify(icons), has_photo, alt_text, status, now, slug);
+      db.prepare(`UPDATE recipes SET name=?, time_min=?, active_min=?, servings=?, tags=?, ingredients=?, steps=?, icons=?, has_photo=?, alt_text=?, status=?, updated_at=? WHERE slug=?`)
+        .run(name, time_min, active_min, servings, JSON.stringify(tags), ingredients, steps, JSON.stringify(icons), has_photo, alt_text, status, now, slug);
     } else {
-      db.prepare(`INSERT INTO recipes (slug, name, time_min, servings, tags, ingredients, steps, icons, has_photo, alt_text, status, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-        .run(slug, name, time_min, servings, JSON.stringify(tags), ingredients, steps, JSON.stringify(icons), has_photo, alt_text, status, now, now);
+      db.prepare(`INSERT INTO recipes (slug, name, time_min, active_min, servings, tags, ingredients, steps, icons, has_photo, alt_text, status, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+        .run(slug, name, time_min, active_min, servings, JSON.stringify(tags), ingredients, steps, JSON.stringify(icons), has_photo, alt_text, status, now, now);
     }
     await generateOgImage(slug, name, icons);
     res.json({ ok: true, slug });

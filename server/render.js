@@ -32,21 +32,15 @@ function jsonForScript(obj) {
     .replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
 }
 
-// Tijd wordt opgeslagen als bovengrens van het gekozen vak (15/30/45/60,
-// 60+ als 90) en overal als vak getoond; "snel" filtert op <= 30.
-const TIJDVAKKEN = [
-  { value: 15, label: '0–15 min' },
-  { value: 30, label: '15–30 min' },
-  { value: 45, label: '30–45 min' },
-  { value: 60, label: '45–60 min' },
-  { value: 90, label: '60+ min' }
-];
-function tijdVak(min) {
-  if (!min) return null;
-  return TIJDVAKKEN.find((v) => min <= v.value) || TIJDVAKKEN[TIJDVAKKEN.length - 1];
-}
-function tijdLabel(min) {
-  return tijdVak(min)?.label || '';
+// Tijden in minuten: time_min = totale tijd, active_min = actieve (hands-on)
+// tijd; "snel" filtert op totaal <= 30. Compacte tekst voor tegels en de
+// beschrijving; de receptpagina toont losse chips.
+function tijdTekst(r) {
+  if (r.active_min && r.time_min && r.active_min !== r.time_min)
+    return `${r.active_min} min actief · ${r.time_min} min totaal`;
+  if (r.time_min) return `${r.time_min} min`;
+  if (r.active_min) return `${r.active_min} min actief`;
+  return '';
 }
 
 function layout({ title, description, ogImage, path: reqPath, loggedIn, body, jsonLd }) {
@@ -127,7 +121,7 @@ function tile(r) {
   <span class="art">${art}</span>
   <span class="body">
     <span class="name">${esc(r.name)}</span>
-    <span class="meta">${[tijdLabel(r.time_min), ...JSON.parse(r.tags)].filter(Boolean).map(esc).join(' · ')}</span>
+    <span class="meta">${[r.time_min ? `${r.time_min} min` : '', ...JSON.parse(r.tags)].filter(Boolean).map(esc).join(' · ')}</span>
   </span>
 </a>`;
 }
@@ -220,6 +214,7 @@ function receptPage({ r, loggedIn }) {
     author: { '@type': 'Person', name: 'Bram Bekkers' },
     datePublished: r.created_at.slice(0, 10),
     totalTime: r.time_min ? `PT${r.time_min}M` : undefined,
+    performTime: r.active_min ? `PT${r.active_min}M` : undefined,
     recipeYield: r.servings || undefined,
     keywords: tags.join(', ') || undefined,
     recipeIngredient: ingredients,
@@ -231,7 +226,7 @@ function receptPage({ r, loggedIn }) {
 
   return layout({
     title: `${r.name} · Bram Bekkers`,
-    description: `Recept: ${r.name}. ${tijdLabel(r.time_min)}${tags.length ? ', ' + tags.join(', ') : ''}.`,
+    description: `Recept: ${r.name}. ${tijdTekst(r)}${tags.length ? ', ' + tags.join(', ') : ''}.`,
     ogImage: `/og/${r.slug}.png`,
     path: `/recept/${r.slug}`,
     loggedIn,
@@ -240,7 +235,8 @@ function receptPage({ r, loggedIn }) {
 ${r.status === 'draft' ? '<p class="concept-banner">Concept, alleen jij ziet dit.</p>' : ''}
 <h1>${esc(r.name)}</h1>
 <div class="chips meta-chips">
-  ${r.time_min ? `<span class="chip">${tijdLabel(r.time_min)}</span>` : ''}
+  ${r.active_min ? `<span class="chip">${r.active_min} min actief</span>` : ''}
+  ${r.time_min ? `<span class="chip">${r.time_min} min${r.active_min ? ' totaal' : ''}</span>` : ''}
   ${r.servings ? `<span class="chip">${esc(r.servings)}</span>` : ''}
   ${tags.map((t) => `<span class="chip">${esc(t)}</span>`).join('')}
 </div>
@@ -298,10 +294,12 @@ function nieuwPage({ r, loggedIn, hasPasskey }) {
   <label class="field"><span class="lab">Naam</span>
     <input class="input" name="name" required maxlength="120" value="${r ? esc(r.name) : ''}" placeholder="Pompoensoep met gember">
   </label>
-  <div class="field"><span class="lab">Hoe snel klaar?</span>
-    <div class="chips">${TIJDVAKKEN.map((v) =>
-      `<label class="chip"><input type="radio" name="time_min" value="${v.value}" ${tijdVak(r?.time_min)?.value === v.value ? 'checked' : ''}>${v.label}</label>`).join('')}
+  <div class="field"><span class="lab">Tijd</span>
+    <div class="tijd-invoer">
+      <label>actief <input class="input" type="number" name="active_min" min="1" max="1440" inputmode="numeric" value="${r?.active_min || ''}" placeholder="20"> min</label>
+      <label>totaal <input class="input" type="number" name="time_min" min="1" max="1440" inputmode="numeric" value="${r?.time_min || ''}" placeholder="45"> min</label>
     </div>
+    <span class="klein-grijs">actief = tijd dat je zelf bezig bent · totaal = inclusief oven- en wachttijd</span>
   </div>
   <label class="field"><span class="lab">Porties</span>
     <input class="input" name="servings" maxlength="40" value="${r ? esc(r.servings) : ''}" placeholder="2 personen">

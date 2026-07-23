@@ -78,6 +78,10 @@ nav .nav-nieuw { font-weight: 600; color: var(--navy); }
 :root[data-theme="dark"] #thema-knop .maan { display: none; }
 :root:not([data-theme="dark"]) #thema-knop .zon { display: none; }
 
+.tijd-invoer { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-bottom: .3rem; }
+.tijd-invoer label { display: flex; align-items: center; gap: .45rem; color: var(--navy-soft); font-size: .9rem; }
+.tijd-invoer .input { width: 5.5rem; }
+
 h1 { font-size: 1.8rem; line-height: 1.2; margin: 1.8rem 0 .8rem; text-wrap: balance; }
 h2 { font-size: 1.25rem; margin: 1.8rem 0 .6rem; }
 h2.klein { font-size: 1.05rem; margin-top: 2.2rem; }
