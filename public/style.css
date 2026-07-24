@@ -124,6 +124,15 @@ a.chip.on { background: var(--navy); color: var(--chiffon); border-color: var(--
 .chip input { accent-color: var(--navy); margin: 0; }
 .chip:has(input:checked) { background: var(--navy); color: var(--chiffon); border-color: var(--navy); }
 .icon-chip svg { flex: none; }
+/* Tweede chiprij (seizoenen) dichter op de eerste; verras-knop rechts. */
+.chips + .chips { margin-top: -.8rem; }
+.chip.verras { margin-left: auto; font-style: italic; }
+
+/* Porties schalen: verschijnt via app.js zodra een ingrediëntregel met een
+   getal begint. */
+.porties { display: flex; align-items: center; gap: .6rem; margin: 0 0 .8rem; }
+.porties .chip { cursor: pointer; font-family: inherit; font-size: 1rem; line-height: 1.4; padding: .25rem .75rem; }
+#porties-tekst { color: var(--navy-soft); font-size: .95rem; min-width: 4ch; text-align: center; }
 
 /* tegels */
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }

@@ -17,6 +17,7 @@ const WORDMARK_SVG = fs.readFileSync(path.join(__dirname, '..', 'logo', 'vector'
 const ASSET_V = Math.floor(fs.statSync(path.join(__dirname, '..', 'public', 'style.css')).mtimeMs).toString(36);
 
 const TAGS = ['ontbijt', 'lunch', 'diner', 'voorgerecht', 'hoofdgerecht', 'bijgerecht', 'nagerecht', 'bakken', 'vega'];
+const SEIZOENEN = ['lente', 'zomer', 'herfst', 'winter'];
 const SITE = 'https://brambekkers.nl';
 
 function esc(s) {
@@ -131,12 +132,24 @@ function tile(r) {
 </a>`;
 }
 
-function receptenPage({ recipes, q, tag, loggedIn, drafts }) {
+function receptenPage({ recipes, q, tag, seizoen, loggedIn, drafts }) {
+  // Chips togglen hun eigen dimensie en behouden de rest (q, tag, seizoen).
+  const link = (p) => {
+    const sp = new URLSearchParams();
+    if (p.q) sp.set('q', p.q);
+    if (p.tag) sp.set('tag', p.tag);
+    if (p.seizoen) sp.set('seizoen', p.seizoen);
+    const s = sp.toString();
+    return '/recepten' + (s ? `?${s}` : '');
+  };
   const chips = ['alles', ...TAGS, 'snel'].map((t) => {
     const on = (t === 'alles' && !tag) || t === tag;
-    const href = t === 'alles' ? '/recepten' : `/recepten?tag=${t}`;
-    return `<a class="chip ${on ? 'on' : ''}" href="${href}${q ? `&q=${encodeURIComponent(q)}` : ''}">${t === 'snel' ? 'snel &lt; 30 min' : t}</a>`;
+    return `<a class="chip ${on ? 'on' : ''}" href="${link({ q, tag: t === 'alles' ? '' : t, seizoen })}">${t === 'snel' ? 'snel &lt; 30 min' : t}</a>`;
   }).join('');
+  const seizoenChips = SEIZOENEN.map((s) => {
+    const on = s === seizoen;
+    return `<a class="chip ${on ? 'on' : ''}" href="${link({ q, tag, seizoen: on ? '' : s })}">${s}</a>`;
+  }).join('') + '<a class="chip verras" href="/verras">verras me</a>';
 
   const grid = recipes.length
     ? `<div class="grid">${recipes.map(tile).join('')}</div>`
@@ -155,8 +168,10 @@ function receptenPage({ recipes, q, tag, loggedIn, drafts }) {
 <form class="zoek" method="get" action="/recepten">
   <input type="search" name="q" value="${esc(q || '')}" placeholder="Zoek op naam of ingrediënt…" aria-label="Zoeken">
   ${tag ? `<input type="hidden" name="tag" value="${esc(tag)}">` : ''}
+  ${seizoen ? `<input type="hidden" name="seizoen" value="${esc(seizoen)}">` : ''}
 </form>
 <div class="chips">${chips}</div>
+<div class="chips">${seizoenChips}</div>
 ${grid}
 ${draftBlock}`
   });
@@ -198,7 +213,11 @@ ${nieuwsteStuk}`
 
 function receptPage({ r, loggedIn }) {
   const tags = JSON.parse(r.tags);
+  const seizoenen = JSON.parse(r.seasons || '[]');
   const iconKeys = JSON.parse(r.icons);
+  // Basis voor portie-schaling: het eerste getal in het portieveld ("2
+  // personen" → 2). Zonder getal valt app.js terug op een ×-vermenigvuldiger.
+  const portieBasis = parseInt((r.servings.match(/\d+/) || [])[0], 10) || 0;
   const ingredients = r.ingredients.split('\n').map((s) => s.trim()).filter(Boolean);
   const steps = r.steps.split('\n').map((s) => s.trim()).filter(Boolean);
 
@@ -221,7 +240,7 @@ function receptPage({ r, loggedIn }) {
     totalTime: r.time_min ? `PT${r.time_min}M` : undefined,
     performTime: r.active_min ? `PT${r.active_min}M` : undefined,
     recipeYield: r.servings || undefined,
-    keywords: tags.join(', ') || undefined,
+    keywords: [...tags, ...seizoenen].join(', ') || undefined,
     recipeIngredient: ingredients,
     recipeInstructions: steps.map((s) => ({ '@type': 'HowToStep', text: s })),
     image: r.has_photo
@@ -236,17 +255,22 @@ function receptPage({ r, loggedIn }) {
     path: `/recept/${r.slug}`,
     loggedIn,
     jsonLd,
-    body: `<article class="recept" data-slug="${esc(r.slug)}">
+    body: `<article class="recept" data-slug="${esc(r.slug)}" data-porties="${portieBasis || ''}" data-servings="${esc(r.servings)}">
 ${r.status === 'draft' ? '<p class="concept-banner">Concept, alleen jij ziet dit.</p>' : ''}
 <h1>${esc(r.name)}</h1>
 <div class="chips meta-chips">
   ${r.active_min ? `<span class="chip">${minTekst(r.active_min)} actief</span>` : ''}
   ${r.time_min ? `<span class="chip">${minTekst(r.time_min)}${r.active_min ? ' totaal' : ''}</span>` : ''}
   ${r.servings ? `<span class="chip">${esc(r.servings)}</span>` : ''}
-  ${tags.map((t) => `<span class="chip">${esc(t)}</span>`).join('')}
+  ${[...tags, ...seizoenen].map((t) => `<span class="chip">${esc(t)}</span>`).join('')}
 </div>
 ${hero}
 <h2>Ingrediënten</h2>
+<div class="porties" id="porties" hidden>
+  <button type="button" class="chip" id="porties-min" aria-label="Minder porties">−</button>
+  <span id="porties-tekst" aria-live="polite"></span>
+  <button type="button" class="chip" id="porties-plus" aria-label="Meer porties">+</button>
+</div>
 <ul class="ingredienten">
 ${ingredients.map((i) => `  <li><label><input type="checkbox"> <span>${esc(i)}</span></label></li>`).join('\n')}
 </ul>
@@ -287,6 +311,9 @@ function nieuwPage({ r, loggedIn, hasPasskey }) {
   const tagOpts = TAGS.map((t) =>
     `<label class="chip"><input type="checkbox" name="tags" value="${t}" ${r && JSON.parse(r.tags).includes(t) ? 'checked' : ''}>${t}</label>`
   ).join('');
+  const seizoenOpts = SEIZOENEN.map((s) =>
+    `<label class="chip"><input type="checkbox" name="seasons" value="${s}" ${r && JSON.parse(r.seasons || '[]').includes(s) ? 'checked' : ''}>${s}</label>`
+  ).join('');
   const iconData = jsonForScript(Object.fromEntries(Object.entries(ICONS).map(([k, ic]) => [k, ic.match])));
 
   return layout({
@@ -310,6 +337,7 @@ function nieuwPage({ r, loggedIn, hasPasskey }) {
     <input class="input" name="servings" maxlength="40" value="${r ? esc(r.servings) : ''}" placeholder="2 personen">
   </label>
   <div class="field"><span class="lab">Tags</span><div class="chips">${tagOpts}</div></div>
+  <div class="field"><span class="lab">Seizoen (optioneel, wanneer op z'n best)</span><div class="chips">${seizoenOpts}</div></div>
   <label class="field"><span class="lab">Ingrediënten (één per regel)</span>
     <textarea class="input" name="ingredients" rows="7" required placeholder="1 flespompoen&#10;duim gember&#10;1 ui">${r ? esc(r.ingredients) : ''}</textarea>
   </label>
@@ -481,4 +509,4 @@ function paperEditor({ p, loggedIn }) {
 }
 
 module.exports = { layout, receptenPage, homePage, receptPage, loginPage, nieuwPage,
-  lezenPage, artikelPage, artikelEditor, paperEditor, TAGS, ONDERWERPEN, esc };
+  lezenPage, artikelPage, artikelEditor, paperEditor, TAGS, SEIZOENEN, ONDERWERPEN, esc };

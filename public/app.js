@@ -26,6 +26,66 @@ if (recept) {
   });
 }
 
+// ── porties schalen ───────────────────────────────────────────────────────
+// Herrekent het getal waarmee een ingrediëntregel begint ("250 g bloem",
+// "½ citroen"); regels zonder getal ("snuf zout") blijven staan. Met een
+// getal in het portieveld telt de knop in porties, anders in ×-factoren.
+if (recept) {
+  const FRACTIES = { '¼': 0.25, '½': 0.5, '¾': 0.75, '⅓': 1 / 3, '⅔': 2 / 3 };
+  function leesGetal(s) {
+    let m = s.match(/^(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)/);
+    if (m) return { v: parseFloat(m[1].replace(',', '.')), v2: parseFloat(m[2].replace(',', '.')), len: m[0].length };
+    m = s.match(/^(\d+)\s*([¼½¾⅓⅔])/);
+    if (m) return { v: +m[1] + FRACTIES[m[2]], len: m[0].length };
+    m = s.match(/^([¼½¾⅓⅔])/);
+    if (m) return { v: FRACTIES[m[1]], len: m[0].length };
+    m = s.match(/^(\d+)\s*\/\s*(\d+)/);
+    if (m && +m[2]) return { v: +m[1] / +m[2], len: m[0].length };
+    m = s.match(/^\d+(?:[.,]\d+)?/);
+    if (m) return { v: parseFloat(m[0].replace(',', '.')), len: m[0].length };
+    return null;
+  }
+  function maakGetal(v) {
+    const heel = Math.floor(v + 1e-9);
+    const rest = v - heel;
+    if (rest < 0.04 || rest > 0.96) return String(Math.round(v));
+    for (const [teken, f] of Object.entries(FRACTIES))
+      if (Math.abs(rest - f) < 0.04) return (heel || '') + teken;
+    return String(Math.round(v * 100) / 100).replace('.', ',');
+  }
+
+  const regels = [...recept.querySelectorAll('.ingredienten li span')]
+    .map((el) => ({ el, orig: el.textContent, getal: leesGetal(el.textContent) }));
+  const blok = document.getElementById('porties');
+  if (blok && regels.some((r) => r.getal)) {
+    const tekstEl = document.getElementById('porties-tekst');
+    const basis = parseInt(recept.dataset.porties, 10) || 0;
+    const servings = recept.dataset.servings || '';
+    const FACTOREN = [0.5, 1, 1.5, 2, 3, 4];
+    let porties = basis;
+    let fi = 1; // index in FACTOREN als er geen portie-getal is
+    function render() {
+      const factor = basis ? porties / basis : FACTOREN[fi];
+      tekstEl.textContent = basis ? servings.replace(/\d+/, porties) : '×' + String(FACTOREN[fi]).replace('.', ',');
+      for (const r of regels) {
+        if (!r.getal) continue;
+        const g = maakGetal(r.getal.v * factor) + (r.getal.v2 ? '-' + maakGetal(r.getal.v2 * factor) : '');
+        r.el.textContent = g + r.orig.slice(r.getal.len);
+      }
+    }
+    document.getElementById('porties-min').addEventListener('click', () => {
+      if (basis) porties = Math.max(1, porties - 1); else fi = Math.max(0, fi - 1);
+      render();
+    });
+    document.getElementById('porties-plus').addEventListener('click', () => {
+      if (basis) porties = Math.min(24, porties + 1); else fi = Math.min(FACTOREN.length - 1, fi + 1);
+      render();
+    });
+    render();
+    blok.hidden = false;
+  }
+}
+
 // ── WebAuthn-hulpjes ──────────────────────────────────────────────────────
 const b64uToBuf = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
 const bufToB64u = (b) => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');

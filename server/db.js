@@ -77,4 +77,8 @@ CREATE TABLE IF NOT EXISTS credentials (
 const recipeCols = db.prepare('PRAGMA table_info(recipes)').all().map((c) => c.name);
 if (!recipeCols.includes('active_min')) db.exec('ALTER TABLE recipes ADD COLUMN active_min INTEGER');
 
+// Migratie 2026-07: seizoenen (lente/zomer/herfst/winter) als apart filter
+// naast de tags, zelfde JSON-array-vorm.
+if (!recipeCols.includes('seasons')) db.exec("ALTER TABLE recipes ADD COLUMN seasons TEXT NOT NULL DEFAULT '[]'");
+
 module.exports = { db, DATA_DIR };

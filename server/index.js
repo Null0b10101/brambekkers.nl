@@ -77,16 +77,24 @@ app.get('/', (req, res) => {
 app.get('/recepten', (req, res) => {
   const q = (req.query.q || '').toString().slice(0, 100).trim();
   const tag = view.TAGS.includes(req.query.tag) || req.query.tag === 'snel' ? req.query.tag : '';
+  const seizoen = view.SEIZOENEN.includes(req.query.seizoen) ? req.query.seizoen : '';
   let sql = "SELECT * FROM recipes WHERE status = 'published'";
   const params = [];
   if (q) { sql += ' AND (name LIKE ? OR ingredients LIKE ?)'; params.push(`%${q}%`, `%${q}%`); }
   if (tag === 'snel') sql += ' AND time_min <= 30';
   else if (tag) { sql += " AND tags LIKE ?"; params.push(`%"${tag}"%`); }
+  if (seizoen) { sql += ' AND seasons LIKE ?'; params.push(`%"${seizoen}"%`); }
   sql += ' ORDER BY created_at DESC';
   const recipes = db.prepare(sql).all(...params);
   const loggedIn = auth.isLoggedIn(req);
   const drafts = loggedIn ? db.prepare("SELECT * FROM recipes WHERE status = 'draft' ORDER BY updated_at DESC").all() : [];
-  res.send(view.receptenPage({ recipes, q, tag, loggedIn, drafts }));
+  res.send(view.receptenPage({ recipes, q, tag, seizoen, loggedIn, drafts }));
+});
+
+// Verras me: één willekeurig gepubliceerd recept (à la Smitten Kitchen).
+app.get('/verras', (req, res) => {
+  const r = db.prepare("SELECT slug FROM recipes WHERE status = 'published' ORDER BY RANDOM() LIMIT 1").get();
+  res.redirect(r ? `/recept/${r.slug}` : '/recepten');
 });
 
 app.get('/recept/:slug', (req, res) => {
@@ -311,6 +319,7 @@ app.post('/api/recepten', auth.requireAuth, auth.checkOrigin, upload.single('pho
     const steps = (req.body.steps || '').trim().slice(0, 10000);
     const status = req.body.status === 'draft' ? 'draft' : 'published';
     const tags = [].concat(req.body.tags || []).filter((t) => view.TAGS.includes(t));
+    const seasons = [].concat(req.body.seasons || []).filter((s) => view.SEIZOENEN.includes(s));
     let icons = [].concat(req.body.icons || []).filter((k) => ICONS[k]).slice(0, 3);
     if (!icons.length) icons = suggestIcons(ingredients);
 
@@ -324,11 +333,11 @@ app.post('/api/recepten', auth.requireAuth, auth.checkOrigin, upload.single('pho
     const alt_text = (req.body.alt_text || '').trim().slice(0, 200) || (has_photo ? name : '');
 
     if (existing) {
-      db.prepare(`UPDATE recipes SET name=?, time_min=?, active_min=?, servings=?, tags=?, ingredients=?, steps=?, icons=?, has_photo=?, alt_text=?, status=?, updated_at=? WHERE slug=?`)
-        .run(name, time_min, active_min, servings, JSON.stringify(tags), ingredients, steps, JSON.stringify(icons), has_photo, alt_text, status, now, slug);
+      db.prepare(`UPDATE recipes SET name=?, time_min=?, active_min=?, servings=?, tags=?, seasons=?, ingredients=?, steps=?, icons=?, has_photo=?, alt_text=?, status=?, updated_at=? WHERE slug=?`)
+        .run(name, time_min, active_min, servings, JSON.stringify(tags), JSON.stringify(seasons), ingredients, steps, JSON.stringify(icons), has_photo, alt_text, status, now, slug);
     } else {
-      db.prepare(`INSERT INTO recipes (slug, name, time_min, active_min, servings, tags, ingredients, steps, icons, has_photo, alt_text, status, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-        .run(slug, name, time_min, active_min, servings, JSON.stringify(tags), ingredients, steps, JSON.stringify(icons), has_photo, alt_text, status, now, now);
+      db.prepare(`INSERT INTO recipes (slug, name, time_min, active_min, servings, tags, seasons, ingredients, steps, icons, has_photo, alt_text, status, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+        .run(slug, name, time_min, active_min, servings, JSON.stringify(tags), JSON.stringify(seasons), ingredients, steps, JSON.stringify(icons), has_photo, alt_text, status, now, now);
     }
     await generateOgImage(slug, name, icons);
     res.json({ ok: true, slug });
@@ -356,7 +365,7 @@ ${urls}
 });
 
 app.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /nieuw\nDisallow: /login\nDisallow: /lezen/nieuw\nDisallow: /papers/nieuw\nSitemap: ${ORIGIN}/sitemap.xml\n`);
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /nieuw\nDisallow: /login\nDisallow: /verras\nDisallow: /lezen/nieuw\nDisallow: /papers/nieuw\nSitemap: ${ORIGIN}/sitemap.xml\n`);
 });
 
 // Site-brede og-image (homepagina) eenmalig genereren.
