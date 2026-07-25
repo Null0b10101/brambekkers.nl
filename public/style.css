@@ -134,6 +134,42 @@ a.chip.on { background: var(--navy); color: var(--chiffon); border-color: var(--
 .porties .chip { cursor: pointer; font-family: inherit; font-size: 1rem; line-height: 1.4; padding: .25rem .75rem; }
 #porties-tekst { color: var(--navy-soft); font-size: .95rem; min-width: 4ch; text-align: center; }
 
+/* Educatie: MSc-leerplan (besloten). */
+.lp-totaal {
+  font-variant-numeric: tabular-nums; font-weight: 600; color: var(--navy-soft);
+  background: var(--chip-bg); border: 1.5px solid var(--line);
+  border-radius: 999px; padding: .2rem .8rem; font-size: .9rem; align-self: center;
+}
+.lp-cluster { margin: 1.6rem 0; }
+.lp-clusterkop {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+  flex-wrap: wrap; border-bottom: 1.5px solid var(--line); padding-bottom: .3rem;
+}
+.lp-clusterkop h2.klein { margin: 0; }
+.lp-eis { color: var(--navy-soft); font-size: .82rem; font-variant-numeric: tabular-nums; }
+.lp-vakken { list-style: none; margin: .7rem 0 0; padding: 0; display: grid; gap: .4rem; }
+.lp-vak {
+  display: grid; grid-template-columns: auto 1fr auto; gap: .8rem; align-items: center;
+  padding: .55rem .8rem; background: var(--card); border: 1.5px solid var(--line);
+  border-left-width: 3px; border-radius: 8px;
+}
+.lp-vak.lp-bio { border-left-color: var(--navy); }
+.lp-vak.lp-research { border-left-color: var(--navy-soft); }
+.lp-vak.lp-keuze { border-left-color: var(--line); }
+.lp-code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .78rem;
+  font-weight: 600; color: var(--navy-soft); white-space: nowrap;
+}
+.lp-naam { font-size: .93rem; min-width: 0; }
+.lp-slot { display: block; color: var(--navy-soft); font-size: .78rem; margin-top: .05rem; }
+.lp-ec {
+  font-variant-numeric: tabular-nums; font-weight: 600; font-size: .85rem; white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .lp-vak { grid-template-columns: 1fr auto; }
+  .lp-code { grid-column: 1 / -1; }
+}
+
 /* tegels */
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
 @media (min-width: 640px) { .grid { grid-template-columns: 1fr 1fr 1fr; } }

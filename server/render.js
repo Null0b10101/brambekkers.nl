@@ -76,6 +76,7 @@ ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
   <a href="/" ${reqPath === '/' ? 'class="active"' : ''}>home</a>
   <a href="/recepten" ${reqPath.startsWith('/recept') ? 'class="active"' : ''}>recepten</a>
   <a href="/lezen" ${reqPath.startsWith('/lezen') || reqPath.startsWith('/paper') ? 'class="active"' : ''}>lezen</a>
+  ${loggedIn ? `<a href="/educatie" ${reqPath.startsWith('/educatie') ? 'class="active"' : ''}>educatie</a>` : ''}
   <button id="thema-knop" aria-label="Wissel tussen licht en donker thema" title="Licht/donker thema">
     <svg class="zon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="4.6" fill="#d9b56d"/>
@@ -371,6 +372,69 @@ function nieuwPage({ r, loggedIn, hasPasskey }) {
   });
 }
 
+// ── Educatie (besloten): MSc Bioinformatics-leerplan ──────────────────────
+// Programma zónder ondernemerschapscertificaat: pure bioinformatica-route,
+// Research Master Cluster (individueel) i.p.v. de Entrepreneurial ACT.
+// Codes/periodes uit de MBF-studiegids 2026–2027.
+const MBF_CLUSTERS = [
+  { kop: 'Verplicht', eis: 'alle vakken', kleur: 'bio', vakken: [
+    { code: 'BIF30806', naam: 'Advanced Bioinformatics', slot: 'periode 2, ochtend', ec: 6 },
+    { code: 'SSB30306', naam: 'Molecular Systems Biology', slot: 'periode 3, hele dag', ec: 6 },
+    { code: 'ZSS06000', naam: 'General Safety + Laboratory Safety', slot: 'hele jaar', ec: 0 }
+  ] },
+  { kop: 'Instap-leerlijn', eis: 'op basis van vooropleiding', kleur: 'bio', vakken: [
+    { code: 'SSB34306', naam: 'Computational Biology', slot: 'periode 1 + 5, ochtend', ec: 6 }
+  ], noot: 'Programming in Python (INF22306) vervalt — je kunt al programmeren.' },
+  { kop: 'Statistiek / Machine Learning', eis: 'minstens 6 EC', kleur: 'bio', vakken: [
+    { code: 'FTE35306', naam: 'Machine Learning', slot: 'periode 4, hele dag', ec: 6 }
+  ] },
+  { kop: 'Life Science', eis: 'minstens 6 EC', kleur: 'bio', vakken: [
+    { code: 'ABG30306', naam: 'Genomics', slot: 'periode 2 + 5, middag', ec: 6 }
+  ] },
+  { kop: 'Richting Bioinformatics', eis: 'minstens 6 EC', kleur: 'bio', vakken: [
+    { code: 'INF32306', naam: 'Software Engineering', slot: 'periode 5, middag', ec: 6 },
+    { code: 'BIF40306', naam: 'Algorithms in Bioinformatics', slot: 'periode 6, middag', ec: 6 }
+  ] },
+  { kop: 'Academic Master Cluster', eis: 'kies er één', kleur: 'research', vakken: [
+    { code: 'YWU60312', naam: 'Research Master Cluster — individueel onderzoeksvoorstel', slot: 'jaar 2, solo', ec: 12 }
+  ], noot: 'Zonder ondernemerschap is dit de individuele route — geen teamproject.' },
+  { kop: 'Afstudeerfase', eis: 'individueel', kleur: 'research', vakken: [
+    { code: 'BIF80336', naam: 'MSc Thesis Bioinformatics', slot: 'hele jaar, één begeleider', ec: 36 },
+    { code: 'BIF70324', naam: 'MSc Internship Bioinformatics', slot: 'hele jaar, extern', ec: 24 }
+  ] },
+  { kop: 'Vrije keuzeruimte', eis: 'aanvullen tot 120', kleur: 'keuze', vakken: [
+    { code: '—', naam: 'Keuzevakken of minor naar interesse', slot: 'in overleg', ec: 6 }
+  ] }
+];
+
+function educatiePage({ loggedIn }) {
+  const totaal = MBF_CLUSTERS.reduce((s, c) => s + c.vakken.reduce((t, v) => t + v.ec, 0), 0);
+  const clusters = MBF_CLUSTERS.map((c) => {
+    const cec = c.vakken.reduce((t, v) => t + v.ec, 0);
+    const rows = c.vakken.map((v) => `<li class="lp-vak lp-${c.kleur}">
+      <span class="lp-code">${esc(v.code)}</span>
+      <span class="lp-naam">${esc(v.naam)}<span class="lp-slot">${esc(v.slot)}</span></span>
+      <span class="lp-ec">${v.ec} EC</span>
+    </li>`).join('');
+    return `<section class="lp-cluster">
+  <div class="lp-clusterkop"><h2 class="klein">${esc(c.kop)}</h2><span class="lp-eis">${esc(c.eis)} · ${cec} EC</span></div>
+  <ul class="lp-vakken">${rows}</ul>
+  ${c.noot ? `<p class="klein-grijs">${esc(c.noot)}</p>` : ''}
+</section>`;
+  }).join('');
+
+  return layout({
+    title: 'Educatie · Bram Bekkers',
+    description: 'Besloten: mijn MSc-plannen en aantekeningen.',
+    path: '/educatie',
+    loggedIn,
+    body: `<div class="kop-rij"><h1>Educatie</h1><span class="lp-totaal">${totaal} EC</span></div>
+<p class="lede">Besloten ruimte. MSc Bioinformatics and Systems Biology (WUR) — de route <strong>zonder</strong> ondernemerschapscertificaat: pure bioinformatica met de individuele Research Master Cluster in plaats van de teamgebonden ACT. Vakken gespreid over twee jaar, daarna de afstudeerfase.</p>
+${clusters}
+<p class="klein-grijs">Codes en periodes uit de MBF-studiegids 2026–2027. Definitieve invulling en vrijstellingen (o.a. uit de inschrijving van 2020) in overleg met de studieadviseur.</p>`
+  });
+}
+
 // ── Lezen: artikelen + leeslijst ──────────────────────────────────────────
 function datumNL(iso) {
   const [j, m, d] = iso.slice(0, 10).split('-');
@@ -509,4 +573,4 @@ function paperEditor({ p, loggedIn }) {
 }
 
 module.exports = { layout, receptenPage, homePage, receptPage, loginPage, nieuwPage,
-  lezenPage, artikelPage, artikelEditor, paperEditor, TAGS, SEIZOENEN, ONDERWERPEN, esc };
+  educatiePage, lezenPage, artikelPage, artikelEditor, paperEditor, TAGS, SEIZOENEN, ONDERWERPEN, esc };

@@ -117,6 +117,11 @@ app.get('/nieuw', auth.requireAuth, (req, res) => {
   res.send(view.nieuwPage({ r, loggedIn: true, hasPasskey: hasPasskey() }));
 });
 
+// Besloten educatie-ruimte: alleen na inloggen (GET → redirect naar /login).
+app.get('/educatie', auth.requireAuth, (req, res) => {
+  res.send(view.educatiePage({ loggedIn: true }));
+});
+
 // ── Lezen: artikelen + leeslijst ──────────────────────────────────────────
 const getArticle = (slug) => db.prepare('SELECT * FROM articles WHERE slug = ?').get(slug);
 const getPaper = (slug) => db.prepare('SELECT * FROM papers WHERE slug = ?').get(slug);
@@ -365,7 +370,7 @@ ${urls}
 });
 
 app.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /nieuw\nDisallow: /login\nDisallow: /verras\nDisallow: /lezen/nieuw\nDisallow: /papers/nieuw\nSitemap: ${ORIGIN}/sitemap.xml\n`);
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /nieuw\nDisallow: /login\nDisallow: /verras\nDisallow: /educatie\nDisallow: /lezen/nieuw\nDisallow: /papers/nieuw\nSitemap: ${ORIGIN}/sitemap.xml\n`);
 });
 
 // Site-brede og-image (homepagina) eenmalig genereren.
